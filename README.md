@@ -328,6 +328,7 @@ def predict_fraud(transaction_data):
 
 ## 📚 Documentation
 
+- [Quick Reference](docs/QUICK_REFERENCE.md) - Common commands and tips
 - [Setup Guide](docs/SETUP.md) - Installation and configuration
 - [Architecture](docs/ARCHITECTURE.md) - System architecture and design
 - [API Documentation](docs/API.md) - REST API endpoints and usage
