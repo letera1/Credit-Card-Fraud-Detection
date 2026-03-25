@@ -9,13 +9,13 @@ from src.pipeline.inference_pipeline import InferencePipeline
 from src.monitoring import setup_logger
 
 # Setup logging
-logger = setup_logger('api')
+logger = setup_logger("api")
 
 # Initialize app
 app = FastAPI(
     title="Credit Card Fraud Detection API",
     description="Real-time fraud detection service",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Initialize inference pipeline
@@ -24,6 +24,7 @@ inference_pipeline = None
 
 class Transaction(BaseModel):
     """Transaction data model."""
+
     Time: float = Field(..., description="Seconds elapsed since first transaction")
     V1: float
     V2: float
@@ -58,6 +59,7 @@ class Transaction(BaseModel):
 
 class PredictionResponse(BaseModel):
     """Prediction response model."""
+
     fraud_probability: float
     is_fraud: bool
     threshold: float
@@ -79,11 +81,7 @@ async def startup_event():
 @app.get("/")
 async def root():
     """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": "Credit Card Fraud Detection API",
-        "version": "1.0.0"
-    }
+    return {"status": "healthy", "service": "Credit Card Fraud Detection API", "version": "1.0.0"}
 
 
 @app.post("/predict", response_model=PredictionResponse)
@@ -100,7 +98,4 @@ async def predict(transaction: Transaction):
 @app.get("/health")
 async def health():
     """Detailed health check."""
-    return {
-        "status": "healthy",
-        "model_loaded": inference_pipeline is not None
-    }
+    return {"status": "healthy", "model_loaded": inference_pipeline is not None}

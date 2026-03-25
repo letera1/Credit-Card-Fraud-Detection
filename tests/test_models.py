@@ -28,31 +28,31 @@ def test_model_trainer_random_forest(sample_train_data, sample_test_data):
     """Test Random Forest training."""
     X_train, y_train = sample_train_data
     X_test, y_test = sample_test_data
-    
+
     trainer = ModelTrainer(random_state=42)
     model = trainer.get_random_forest(n_estimators=10)
-    
+
     trained_model, metrics = trainer.train_and_evaluate(
-        model, X_train, y_train, X_test, y_test, 'RF_test'
+        model, X_train, y_train, X_test, y_test, "RF_test"
     )
-    
-    assert 'Precision' in metrics
-    assert 'Recall' in metrics
-    assert 'ROC-AUC' in metrics
-    assert 0 <= metrics['ROC-AUC'] <= 1
+
+    assert "Precision" in metrics
+    assert "Recall" in metrics
+    assert "ROC-AUC" in metrics
+    assert 0 <= metrics["ROC-AUC"] <= 1
 
 
 def test_model_trainer_xgboost(sample_train_data, sample_test_data):
     """Test XGBoost training."""
     X_train, y_train = sample_train_data
     X_test, y_test = sample_test_data
-    
+
     trainer = ModelTrainer(random_state=42)
     model = trainer.get_xgboost(n_estimators=10)
-    
+
     trained_model, metrics = trainer.train_and_evaluate(
-        model, X_train, y_train, X_test, y_test, 'XGB_test'
+        model, X_train, y_train, X_test, y_test, "XGB_test"
     )
-    
-    assert 'F1-Score' in metrics
-    assert metrics['Model'] == 'XGB_test'
+
+    assert "F1-Score" in metrics
+    assert metrics["Model"] == "XGB_test"
