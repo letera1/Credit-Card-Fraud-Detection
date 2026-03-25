@@ -329,10 +329,13 @@ def predict_fraud(transaction_data):
 ## 📚 Documentation
 
 - [Setup Guide](docs/SETUP.md) - Installation and configuration
+- [Architecture](docs/ARCHITECTURE.md) - System architecture and design
 - [API Documentation](docs/API.md) - REST API endpoints and usage
 - [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment strategies
 - [Project Structure](docs/PROJECT_STRUCTURE.md) - Codebase organization
 - [Notebook Guide](docs/NOTEBOOK_GUIDE.md) - Jupyter notebook details
+- [Contributing](CONTRIBUTING.md) - Contribution guidelines
+- [Changelog](CHANGELOG.md) - Version history
 
 ## 🧪 Testing
 
@@ -362,11 +365,17 @@ make lint && make test
 
 ## 🤝 Contributing
 
-Contributions are welcome! Areas for improvement:
-- Additional feature engineering
-- Deep learning approaches (Autoencoders, LSTMs)
-- Real-time streaming implementation
-- Model explainability (SHAP, LIME)
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+Areas for improvement:
+- Additional feature engineering techniques
+- Deep learning approaches (Autoencoders, LSTMs, Transformers)
+- Real-time streaming implementation with Kafka/Kinesis
+- Model explainability (SHAP, LIME, Integrated Gradients)
+- Advanced ensemble methods
+- Automated hyperparameter optimization (Optuna, Ray Tune)
+- Model monitoring and drift detection
+- A/B testing framework
 
 ---
 
