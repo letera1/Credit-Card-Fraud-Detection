@@ -22,26 +22,32 @@ This project tackles the challenging problem of **credit card fraud detection** 
 
 ### 1. Clone & Setup
 ```bash
-cd backend
+git clone <repository-url>
+cd Credit-Card-Fraud-Detection
 pip install -r requirements.txt
 ```
 
 ### 2. Data Preparation
-Download the [Credit Card Fraud Detection dataset](https://www.kaggle.com/mlg-ulb/creditcardfraud) and place `creditcard.csv` in the root directory:
+Download the [Credit Card Fraud Detection dataset](https://www.kaggle.com/mlg-ulb/creditcardfraud) and place `creditcard.csv` in the `data/` directory:
 ```
 Credit-Card-Fraud-Detection/
-├── backend/
-│   ├── credit_card_fraud_detection.ipynb
-│   ├── requirements.txt
-│   └── README.md
-├── creditcard.csv    # ← Place dataset here
-└── README.md
+├── data/
+│   └── creditcard.csv    # ← Place dataset here
+└── ...
 ```
 
-### 3. Run the Analysis
+### 3. Run the Training Pipeline
 ```bash
-cd backend
-jupyter notebook credit_card_fraud_detection.ipynb
+# Option 1: Run the training script
+python scripts/train.py
+
+# Option 2: Use the Jupyter notebook
+jupyter notebook notebooks/credit_card_fraud_detection.ipynb
+```
+
+### 4. Make Predictions
+```bash
+python scripts/predict.py
 ```
 
 ---
