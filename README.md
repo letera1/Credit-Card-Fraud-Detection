@@ -260,6 +260,12 @@ def predict_fraud(transaction_data):
 
 ---
 
+## 📚 Documentation
+
+- [Setup Guide](docs/SETUP.md) - Installation and configuration
+- [Project Structure](docs/PROJECT_STRUCTURE.md) - Codebase organization
+- [Notebook Guide](docs/NOTEBOOK_GUIDE.md) - Jupyter notebook details
+
 ## 🤝 Contributing
 
 Contributions are welcome! Areas for improvement:
