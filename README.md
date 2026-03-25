@@ -50,11 +50,32 @@ jupyter notebook credit_card_fraud_detection.ipynb
 
 ```
 Credit-Card-Fraud-Detection/
-├── backend/
-│   ├── credit_card_fraud_detection.ipynb   # Main analysis notebook
-│   ├── requirements.txt                     # Python dependencies
-│   └── README.md                            # Backend documentation
-├── creditcard.csv                           # Input dataset
+├── config/
+│   └── config.yaml                          # Configuration file
+├── data/
+│   └── creditcard.csv                       # Input dataset (place here)
+├── docs/
+│   └── NOTEBOOK_GUIDE.md                    # Notebook documentation
+├── models/                                  # Trained models
+├── notebooks/
+│   └── credit_card_fraud_detection.ipynb   # Main analysis notebook
+├── outputs/
+│   ├── plots/                               # Visualization outputs
+│   └── results/                             # Model results
+├── scripts/
+│   ├── train.py                             # Training pipeline
+│   └── predict.py                           # Prediction script
+├── src/
+│   ├── __init__.py
+│   ├── data_loader.py                       # Data loading utilities
+│   ├── preprocessing.py                     # Preprocessing functions
+│   ├── sampling.py                          # Sampling strategies
+│   ├── models.py                            # Model training
+│   ├── evaluation.py                        # Evaluation utilities
+│   └── utils.py                             # Helper functions
+├── .gitignore
+├── requirements.txt                         # Python dependencies
+├── LICENSE
 └── README.md                                # Project overview
 ```
 
