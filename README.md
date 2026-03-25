@@ -27,7 +27,13 @@ This project tackles the challenging problem of **credit card fraud detection** 
 ```bash
 git clone <repository-url>
 cd Credit-Card-Fraud-Detection
+
+# Using Make (recommended)
+make install
+
+# Or manually
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ### 2. Data Preparation
@@ -41,16 +47,32 @@ Credit-Card-Fraud-Detection/
 
 ### 3. Run the Training Pipeline
 ```bash
-# Option 1: Run the training script
-python scripts/train.py
+# Using Make
+make train
 
-# Option 2: Use the Jupyter notebook
-jupyter notebook notebooks/credit_card_fraud_detection.ipynb
+# Or directly
+python scripts/train.py
 ```
 
-### 4. Make Predictions
+### 4. Start API Server
 ```bash
+# Using Make
+make serve
+
+# Using Docker
+docker-compose up -d
+
+# Or directly
+uvicorn src.api.app:app --reload
+```
+
+### 5. Make Predictions
+```bash
+# Single prediction
 python scripts/predict.py
+
+# Batch prediction
+python scripts/predict.py --input data/test.csv --output results.csv
 ```
 
 ---
@@ -59,33 +81,68 @@ python scripts/predict.py
 
 ```
 Credit-Card-Fraud-Detection/
+├── .github/
+│   └── workflows/
+│       └── ci.yml                           # CI/CD pipeline
 ├── config/
-│   └── config.yaml                          # Configuration file
+│   └── config.yaml                          # Configuration management
 ├── data/
-│   └── creditcard.csv                       # Input dataset (place here)
+│   └── creditcard.csv                       # Dataset (place here)
 ├── docs/
-│   └── NOTEBOOK_GUIDE.md                    # Notebook documentation
-├── models/                                  # Trained models
+│   ├── API.md                               # API documentation
+│   ├── DEPLOYMENT.md                        # Deployment guide
+│   ├── NOTEBOOK_GUIDE.md                    # Notebook guide
+│   ├── PROJECT_STRUCTURE.md                 # Structure details
+│   └── SETUP.md                             # Setup instructions
+├── logs/                                    # Application logs
+├── models/                                  # Trained model artifacts
 ├── notebooks/
-│   └── credit_card_fraud_detection.ipynb   # Main analysis notebook
+│   └── credit_card_fraud_detection.ipynb   # Analysis notebook
 ├── outputs/
-│   ├── plots/                               # Visualization outputs
+│   ├── metrics/                             # Metrics tracking
+│   ├── plots/                               # Visualizations
 │   └── results/                             # Model results
 ├── scripts/
 │   ├── train.py                             # Training pipeline
 │   └── predict.py                           # Prediction script
 ├── src/
-│   ├── __init__.py
-│   ├── data_loader.py                       # Data loading utilities
-│   ├── preprocessing.py                     # Preprocessing functions
+│   ├── api/
+│   │   ├── __init__.py
+│   │   └── app.py                           # FastAPI application
+│   ├── config/
+│   │   ├── __init__.py
+│   │   └── config_manager.py                # Config management
+│   ├── features/
+│   │   ├── __init__.py
+│   │   └── feature_engineer.py              # Feature engineering
+│   ├── monitoring/
+│   │   ├── __init__.py
+│   │   ├── logger.py                        # Logging setup
+│   │   └── metrics_tracker.py               # Metrics tracking
+│   ├── pipeline/
+│   │   ├── __init__.py
+│   │   ├── training_pipeline.py             # Training orchestration
+│   │   └── inference_pipeline.py            # Inference orchestration
+│   ├── data_loader.py                       # Data loading
+│   ├── preprocessing.py                     # Preprocessing
 │   ├── sampling.py                          # Sampling strategies
 │   ├── models.py                            # Model training
-│   ├── evaluation.py                        # Evaluation utilities
-│   └── utils.py                             # Helper functions
+│   ├── evaluation.py                        # Evaluation
+│   └── utils.py                             # Utilities
+├── tests/
+│   ├── conftest.py                          # Pytest configuration
+│   ├── test_data_loader.py                  # Data loader tests
+│   ├── test_models.py                       # Model tests
+│   └── test_preprocessing.py                # Preprocessing tests
 ├── .gitignore
+├── docker-compose.yml                       # Docker Compose config
+├── Dockerfile                               # Docker image definition
+├── Makefile                                 # Build automation
+├── pyproject.toml                           # Project metadata
 ├── requirements.txt                         # Python dependencies
+├── setup.py                                 # Package setup
 ├── LICENSE
-└── README.md                                # Project overview
+└── README.md                                # This file
 ```
 
 ---
@@ -118,11 +175,16 @@ Credit-Card-Fraud-Detection/
 ## 📈 Key Features
 
 ### Technical
+- ✅ Modular, production-ready architecture
 - ✅ Comprehensive EDA with visualizations
 - ✅ Multiple class imbalance handling strategies
 - ✅ Hyperparameter tuning with GridSearchCV
 - ✅ Multi-metric evaluation dashboard
-- ✅ Model persistence for deployment
+- ✅ RESTful API with FastAPI
+- ✅ Docker containerization
+- ✅ CI/CD pipeline with GitHub Actions
+- ✅ Comprehensive logging and monitoring
+- ✅ Unit tests with pytest
 
 ### Business
 - ✅ Cost-benefit analysis framework
@@ -130,6 +192,7 @@ Credit-Card-Fraud-Detection/
 - ✅ Precision vs Recall trade-off analysis
 - ✅ Production deployment recommendations
 - ✅ ROI calculations
+- ✅ Real-time inference capabilities
 
 ---
 
@@ -266,8 +329,36 @@ def predict_fraud(transaction_data):
 ## 📚 Documentation
 
 - [Setup Guide](docs/SETUP.md) - Installation and configuration
+- [API Documentation](docs/API.md) - REST API endpoints and usage
+- [Deployment Guide](docs/DEPLOYMENT.md) - Production deployment strategies
 - [Project Structure](docs/PROJECT_STRUCTURE.md) - Codebase organization
 - [Notebook Guide](docs/NOTEBOOK_GUIDE.md) - Jupyter notebook details
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+make test
+
+# Run with coverage
+pytest tests/ --cov=src --cov-report=html
+
+# Run specific test file
+pytest tests/test_models.py -v
+```
+
+## 🎨 Code Quality
+
+```bash
+# Format code
+make format
+
+# Lint code
+make lint
+
+# Run all quality checks
+make lint && make test
+```
 
 ## 🤝 Contributing
 
