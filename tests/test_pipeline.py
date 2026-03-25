@@ -8,7 +8,9 @@ from src.pipeline import InferencePipeline
 def test_inference_pipeline_initialization():
     """Test inference pipeline initialization."""
     with patch("src.pipeline.inference_pipeline.load_model") as mock_load:
-        mock_load.return_value = Mock()
+        mock_model = Mock()
+        mock_model.feature_names_in_ = None
+        mock_load.return_value = mock_model
         pipeline = InferencePipeline(model_path="test_model.pkl")
         assert pipeline.model is not None
         assert pipeline.threshold > 0
@@ -19,6 +21,8 @@ def test_inference_pipeline_predict():
     with patch("src.pipeline.inference_pipeline.load_model") as mock_load:
         mock_model = Mock()
         mock_model.predict_proba.return_value = [[0.3, 0.7]]
+        # Mock feature_names_in_ to avoid iteration error
+        mock_model.feature_names_in_ = None
         mock_load.return_value = mock_model
 
         pipeline = InferencePipeline(model_path="test_model.pkl")
