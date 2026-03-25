@@ -193,14 +193,14 @@ param_grid = {
 
 ## 📁 Output Artifacts
 
-After running the notebook:
+After running the training pipeline:
 
-| File | Description |
-|------|-------------|
-| `best_fraud_model.pkl` | Trained model ready for deployment |
-| `amount_scaler.pkl` | Feature scaler for preprocessing |
-| `model_comparison_results.csv` | Performance comparison table |
-| `*.png` | Visualization charts |
+| File | Location | Description |
+|------|----------|-------------|
+| `best_fraud_model.pkl` | `models/` | Trained model ready for deployment |
+| `amount_scaler.pkl` | `models/` | Feature scaler for preprocessing |
+| `model_comparison.csv` | `outputs/results/` | Performance comparison table |
+| `*.png` | `outputs/plots/` | Visualization charts |
 
 ---
 
