@@ -4,10 +4,38 @@
 
 @layer base {
   * {
-    @apply border-gray-200;
+    @apply border-white/10;
   }
   
   body {
-    @apply bg-white text-gray-900;
+    @apply bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white min-h-screen;
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-white/5 rounded-lg;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-purple-500/50 rounded-lg hover:bg-purple-500/70;
+  }
+
+  /* Smooth animations */
+  * {
+    @apply transition-colors duration-200;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .glow {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
   }
 }

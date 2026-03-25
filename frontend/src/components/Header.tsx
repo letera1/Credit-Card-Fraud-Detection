@@ -17,51 +17,61 @@ export default function Header() {
     }
 
     checkApiStatus()
-    const interval = setInterval(checkApiStatus, 30000) // Check every 30s
+    const interval = setInterval(checkApiStatus, 30000)
 
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="backdrop-blur-xl bg-white/5 border-b border-white/10 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="bg-primary-600 rounded-lg p-2">
-              <svg
-                className="h-8 w-8 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                />
-              </svg>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl blur-lg opacity-50"></div>
+              <div className="relative bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-2.5">
+                <svg
+                  className="h-7 w-7 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
+                </svg>
+              </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Fraud Detection</h1>
-              <p className="text-xs text-gray-500">ML-Powered Security</p>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+                Fraud Detection AI
+              </h1>
+              <p className="text-xs text-gray-400">Enterprise Security Platform</p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
             {/* API Status */}
-            <div className="flex items-center space-x-2">
-              <div
-                className={`h-2 w-2 rounded-full ${
-                  apiStatus === 'online'
-                    ? 'bg-success-500'
-                    : apiStatus === 'offline'
-                    ? 'bg-danger-500'
-                    : 'bg-gray-400'
-                }`}
-              />
-              <span className="text-sm text-gray-600">
-                API {apiStatus === 'online' ? 'Online' : apiStatus === 'offline' ? 'Offline' : 'Checking...'}
+            <div className="flex items-center space-x-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
+              <div className="relative">
+                <div
+                  className={`h-2.5 w-2.5 rounded-full ${
+                    apiStatus === 'online'
+                      ? 'bg-green-400'
+                      : apiStatus === 'offline'
+                      ? 'bg-red-400'
+                      : 'bg-yellow-400'
+                  }`}
+                />
+                {apiStatus === 'online' && (
+                  <div className="absolute inset-0 h-2.5 w-2.5 rounded-full bg-green-400 animate-ping opacity-75"></div>
+                )}
+              </div>
+              <span className="text-sm text-gray-300 font-medium">
+                {apiStatus === 'online' ? 'API Online' : apiStatus === 'offline' ? 'API Offline' : 'Checking...'}
               </span>
             </div>
 
@@ -70,7 +80,7 @@ export default function Header() {
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
             >
               <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                 <path

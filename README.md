@@ -30,13 +30,18 @@ docker-compose -f docker-compose.fullstack.yml up -d
 
 ## First Time Setup
 
-1. Install dependencies:
+1. Install backend dependencies:
 ```bash
 pip install -r requirements.txt
-cd frontend && npm install --legacy-peer-deps
 ```
 
-2. Train models (optional):
+2. Install frontend dependencies:
+```bash
+cd frontend
+npm install --legacy-peer-deps
+```
+
+3. Train models (optional):
 ```bash
 python train_model.py
 ```
