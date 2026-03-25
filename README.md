@@ -216,16 +216,16 @@ After running the training pipeline:
 
 ### Integration Example
 ```python
-import joblib
+from src.utils import load_model
 
 # Load model
-model = joblib.load('best_fraud_model.pkl')
-scaler = joblib.load('amount_scaler.pkl')
+model = load_model('models/best_fraud_model.pkl')
+scaler = load_model('models/amount_scaler.pkl')
 
 # Predict
 def predict_fraud(transaction_data):
     # Preprocess
-    transaction_data['Scaled_Amount'] = scaler.transform([transaction_data['Amount']])
+    transaction_data['Scaled_Amount'] = scaler.transform([[transaction_data['Amount']]])[0]
     # Predict
     proba = model.predict_proba([transaction_data])[0, 1]
     return proba >= 0.35  # Optimized threshold
