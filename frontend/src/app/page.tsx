@@ -9,6 +9,9 @@ import PredictionForm from '@/components/PredictionForm'
 import ResultCard from '@/components/ResultCard'
 import TransactionHistory from '@/components/TransactionHistory'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
+import FraudAlerts from '@/components/FraudAlerts'
+import ModelInfo from '@/components/ModelInfo'
+import Settings from '@/components/Settings'
 import { PredictionResult } from '@/types'
 import { getAnalytics } from '@/lib/api'
 
@@ -258,6 +261,15 @@ export default function Home() {
             </div>
           </>
         )
+
+      case 'alerts':
+        return <FraudAlerts />
+
+      case 'model-info':
+        return <ModelInfo />
+
+      case 'settings':
+        return <Settings />
 
       default:
         return (

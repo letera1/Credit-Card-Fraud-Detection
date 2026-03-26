@@ -86,28 +86,17 @@ export default function Sidebar({ activeView, setActiveView }: SidebarProps) {
             <button
               key={item.id}
               onClick={() => setActiveView(item.id)}
-              className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+              className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                activeView === item.id
+                  ? 'bg-primary text-white shadow-lg shadow-primary/50'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+              }`}
             >
               <span>{item.icon}</span>
               <span>{item.label}</span>
             </button>
           ))}
         </nav>
-
-        {/* Upgrade Card */}
-        <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
-          <div className="flex items-center justify-center mb-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <span className="text-2xl">🛡️</span>
-            </div>
-          </div>
-          <p className="text-xs text-center text-foreground font-medium mb-2">
-            Upgrade to Enterprise for advanced fraud detection features.
-          </p>
-          <button className="w-full py-2 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium hover:shadow-lg hover:shadow-purple-500/50 transition-all">
-            Upgrade →
-          </button>
-        </div>
       </div>
     </aside>
   )
