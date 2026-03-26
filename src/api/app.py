@@ -14,6 +14,7 @@ import shap
 
 from src.pipeline.inference_pipeline import InferencePipeline
 from src.monitoring import setup_logger
+from src.features.feature_engineer import FeatureEngineer
 
 # Setup logging
 logger = setup_logger("api")
@@ -39,6 +40,7 @@ inference_pipeline = None
 ensemble_models = None
 feature_names = None
 shap_explainer = None
+feature_engineer = FeatureEngineer()
 
 # In-memory storage for demo (use database in production)
 transaction_history = []
@@ -162,41 +164,10 @@ async def predict(transaction: Transaction):
         user_id = transaction_data.pop('user_id', None)
         device_id = transaction_data.pop('device_id', None)
         
-        # Apply feature engineering (same as training)
-        import pandas as pd
-        df = pd.DataFrame([transaction_data])
+        # Apply feature engineering using the FeatureEngineer class
+        df = feature_engineer.engineer_features(transaction_data)
         
-        # Time-based features
-        df['Hour'] = (df['Time'] / 3600) % 24
-        df['Day'] = (df['Time'] / 86400).astype(int)
-        df['Is_Night'] = ((df['Hour'] >= 22) | (df['Hour'] <= 6)).astype(int)
-        df['Is_Weekend'] = (df['Day'] % 7 >= 5).astype(int)
-        
-        # Amount-based features (use Scaled_Amount as Amount)
-        df['Amount'] = df['Scaled_Amount']  # Temporary for calculations
-        df['Log_Amount'] = np.log1p(df['Amount'])
-        df['Amount_Squared'] = df['Amount'] ** 2
-        df['Amount_Sqrt'] = np.sqrt(df['Amount'])
-        
-        # Statistical features from V columns
-        v_cols = [f'V{i}' for i in range(1, 29)]
-        df['V_Mean'] = df[v_cols].mean(axis=1)
-        df['V_Std'] = df[v_cols].std(axis=1)
-        df['V_Max'] = df[v_cols].max(axis=1)
-        df['V_Min'] = df[v_cols].min(axis=1)
-        df['V_Range'] = df['V_Max'] - df['V_Min']
-        
-        # Interaction features
-        df['V1_V2_Interaction'] = df['V1'] * df['V2']
-        df['V1_Amount_Interaction'] = df['V1'] * df['Log_Amount']
-        
-        # Anomaly score
-        df['V_Anomaly_Score'] = np.abs(df[v_cols]).sum(axis=1)
-        
-        # Drop temporary Amount column
-        df = df.drop('Amount', axis=1)
-        
-        # Get prediction directly from model (bypass inference pipeline)
+        # Get prediction directly from model
         model = joblib.load('models/best_fraud_model.pkl')
         
         # Predict
