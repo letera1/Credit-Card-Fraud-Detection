@@ -1,4 +1,4 @@
-"""FastAPI application for fraud detection service with advanced features."""
+"""FastAPI application for fraud detection service with advanced ML features."""
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +8,9 @@ from datetime import datetime
 import logging
 import asyncio
 import json
+import joblib
+import numpy as np
+import shap
 
 from src.pipeline.inference_pipeline import InferencePipeline
 from src.monitoring import setup_logger
@@ -17,9 +20,9 @@ logger = setup_logger("api")
 
 # Initialize app
 app = FastAPI(
-    title="Credit Card Fraud Detection API - Enterprise Edition",
-    description="Advanced real-time fraud detection with ML, anomaly detection, and behavioral analytics",
-    version="2.0.0",
+    title="Credit Card Fraud Detection API - ML Expert Edition",
+    description="Advanced fraud detection with Ensemble ML, SHAP explainability, and Feature Engineering",
+    version="3.0.0",
 )
 
 # Add CORS middleware
@@ -33,11 +36,15 @@ app.add_middleware(
 
 # Initialize inference pipeline
 inference_pipeline = None
+ensemble_models = None
+feature_names = None
+shap_explainer = None
 
 # In-memory storage for demo (use database in production)
 transaction_history = []
 alert_queue = []
 risk_scores = {}
+model_metrics = {}
 
 
 class Transaction(BaseModel):

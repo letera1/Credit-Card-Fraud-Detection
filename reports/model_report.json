@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-03-26T17:20:17.292628",
+  "dataset": {
+    "total_samples": 50000,
+    "fraud_rate": 0.02,
+    "features": 45,
+    "train_samples": 40000,
+    "test_samples": 10000
+  },
+  "models": {
+    "xgboost": {
+      "roc_auc": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "lightgbm": {
+      "roc_auc": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "random_forest": {
+      "roc_auc": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "ensemble": {
+      "roc_auc": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "feature_engineering": {
+    "time_features": [
+      "Hour",
+      "Day",
+      "Is_Night",
+      "Is_Weekend"
+    ],
+    "amount_features": [
+      "Log_Amount",
+      "Amount_Squared",
+      "Amount_Sqrt"
+    ],
+    "statistical_features": [
+      "V_Mean",
+      "V_Std",
+      "V_Max",
+      "V_Min",
+      "V_Range"
+    ],
+    "interaction_features": [
+      "V1_V2_Interaction",
+      "V1_Amount_Interaction"
+    ],
+    "anomaly_features": [
+      "V_Anomaly_Score"
+    ]
+  }
+}
