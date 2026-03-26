@@ -95,6 +95,8 @@ class PredictionResponse(BaseModel):
     timestamp: str
     anomaly_flags: List[str] = Field(default_factory=list)
     recommended_action: str
+    shap_explanation: Optional[Dict] = Field(None, description="SHAP feature importance")
+    model_version: str = "3.0.0"
 
 
 class Alert(BaseModel):
@@ -135,16 +137,19 @@ async def root():
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "service": "Credit Card Fraud Detection API - Enterprise Edition",
-        "version": "2.0.0",
+        "service": "Credit Card Fraud Detection API - ML Expert Edition",
+        "version": "3.0.0",
         "features": [
-            "Real-time fraud detection",
-            "Anomaly detection",
-            "Risk scoring",
-            "Transaction monitoring",
-            "Alert management",
-            "Behavioral analytics"
-        ]
+            "Ensemble ML (XGBoost + LightGBM + Random Forest)",
+            "Advanced Feature Engineering (45+ features)",
+            "SMOTE for Class Imbalance",
+            "SHAP Explainability",
+            "Real-time Model Monitoring",
+            "Data Drift Detection",
+            "Risk Scoring & Anomaly Detection",
+            "Transaction History & Analytics"
+        ],
+        "model_performance": model_metrics.get('models', {}).get('ensemble', {}) if model_metrics else {}
     }
 
 
@@ -157,8 +162,55 @@ async def predict(transaction: Transaction):
         user_id = transaction_data.pop('user_id', None)
         device_id = transaction_data.pop('device_id', None)
         
-        # Get base prediction
-        result = inference_pipeline.predict(transaction_data)
+        # Apply feature engineering (same as training)
+        import pandas as pd
+        df = pd.DataFrame([transaction_data])
+        
+        # Time-based features
+        df['Hour'] = (df['Time'] / 3600) % 24
+        df['Day'] = (df['Time'] / 86400).astype(int)
+        df['Is_Night'] = ((df['Hour'] >= 22) | (df['Hour'] <= 6)).astype(int)
+        df['Is_Weekend'] = (df['Day'] % 7 >= 5).astype(int)
+        
+        # Amount-based features (use Scaled_Amount as Amount)
+        df['Amount'] = df['Scaled_Amount']  # Temporary for calculations
+        df['Log_Amount'] = np.log1p(df['Amount'])
+        df['Amount_Squared'] = df['Amount'] ** 2
+        df['Amount_Sqrt'] = np.sqrt(df['Amount'])
+        
+        # Statistical features from V columns
+        v_cols = [f'V{i}' for i in range(1, 29)]
+        df['V_Mean'] = df[v_cols].mean(axis=1)
+        df['V_Std'] = df[v_cols].std(axis=1)
+        df['V_Max'] = df[v_cols].max(axis=1)
+        df['V_Min'] = df[v_cols].min(axis=1)
+        df['V_Range'] = df['V_Max'] - df['V_Min']
+        
+        # Interaction features
+        df['V1_V2_Interaction'] = df['V1'] * df['V2']
+        df['V1_Amount_Interaction'] = df['V1'] * df['Log_Amount']
+        
+        # Anomaly score
+        df['V_Anomaly_Score'] = np.abs(df[v_cols]).sum(axis=1)
+        
+        # Drop temporary Amount column
+        df = df.drop('Amount', axis=1)
+        
+        # Get prediction directly from model (bypass inference pipeline)
+        model = joblib.load('models/best_fraud_model.pkl')
+        
+        # Predict
+        fraud_proba = model.predict_proba(df)[0][1]
+        threshold = 0.5
+        is_fraud = fraud_proba > threshold
+        confidence = max(fraud_proba, 1 - fraud_proba)
+        
+        result = {
+            'fraud_probability': float(fraud_proba),
+            'is_fraud': bool(is_fraud),
+            'threshold': threshold,
+            'confidence': float(confidence)
+        }
         
         # Generate transaction ID
         transaction_id = f"TXN-{datetime.now().strftime('%Y%m%d%H%M%S')}-{len(transaction_history)}"
@@ -202,8 +254,23 @@ async def predict(transaction: Transaction):
             "transaction_id": transaction_id,
             "timestamp": datetime.now().isoformat(),
             "anomaly_flags": anomaly_flags,
-            "recommended_action": recommended_action
+            "recommended_action": recommended_action,
+            "shap_explanation": None,  # Will be added if explainer available
+            "model_version": "3.0.0"
         }
+        
+        # Add SHAP explanation if available
+        if shap_explainer and feature_names:
+            try:
+                from src.explainability import ModelExplainer
+                explainer = ModelExplainer()
+                
+                # Prepare features in correct order
+                feature_array = np.array([transaction_data[f] for f in feature_names])
+                shap_exp = explainer.explain_prediction(feature_array, top_n=5)
+                enhanced_result["shap_explanation"] = shap_exp
+            except Exception as e:
+                logger.warning(f"SHAP explanation failed: {e}")
         
         # Store transaction history
         transaction_record = {
@@ -327,10 +394,44 @@ async def health():
     return {
         "status": "healthy",
         "model_loaded": inference_pipeline is not None,
+        "ensemble_loaded": ensemble_models is not None,
+        "shap_available": shap_explainer is not None,
         "transactions_processed": len(transaction_history),
         "active_alerts": len([a for a in alert_queue if a['status'] == 'active']),
-        "version": "2.0.0"
+        "version": "3.0.0",
+        "features": {
+            "total_features": len(feature_names) if feature_names else 30,
+            "feature_engineering": True,
+            "ensemble_models": list(ensemble_models.keys()) if ensemble_models else ["xgboost"]
+        }
     }
+
+
+@app.get("/model/info")
+async def model_info():
+    """Get detailed model information."""
+    return {
+        "version": "3.0.0",
+        "models": model_metrics.get('models', {}) if model_metrics else {},
+        "dataset": model_metrics.get('dataset', {}) if model_metrics else {},
+        "feature_engineering": model_metrics.get('feature_engineering', {}) if model_metrics else {},
+        "training_date": model_metrics.get('timestamp', 'unknown') if model_metrics else 'unknown'
+    }
+
+
+@app.get("/model/feature-importance")
+async def feature_importance():
+    """Get feature importance from the model."""
+    try:
+        from src.explainability import ModelExplainer
+        explainer = ModelExplainer()
+        importance = explainer.get_feature_importance()
+        return {
+            "feature_importance": importance,
+            "total_features": len(importance)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get feature importance: {str(e)}")
 
 
 @app.delete("/reset")
@@ -340,4 +441,4 @@ async def reset_data():
     transaction_history = []
     alert_queue = []
     risk_scores = {}
-    return {"message": "All data reset successfully"}
+    return {"message": "All data reset successfully", "version": "3.0.0"}

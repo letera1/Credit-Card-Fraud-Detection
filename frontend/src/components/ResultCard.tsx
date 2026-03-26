@@ -155,6 +155,38 @@ export default function ResultCard({ result }: Props) {
             )}
           </div>
         </div>
+
+        {/* SHAP Explanation */}
+        {(result as any).shap_explanation && (
+          <div className="p-4 rounded-lg bg-muted/30 border border-border">
+            <h3 className="text-sm font-bold text-foreground mb-3 flex items-center space-x-2">
+              <span>🔍</span>
+              <span>Model Explanation (SHAP)</span>
+            </h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              Top features influencing this prediction:
+            </p>
+            <div className="space-y-2">
+              {(result as any).shap_explanation.top_features.map((feature: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded bg-background">
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-foreground">{feature.feature}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {feature.impact} fraud probability
+                    </p>
+                  </div>
+                  <div className={`px-2 py-1 rounded text-xs font-medium ${
+                    feature.shap_value > 0 
+                      ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                      : 'bg-green-500/10 text-green-600 dark:text-green-400'
+                  }`}>
+                    {feature.shap_value > 0 ? '+' : ''}{feature.shap_value.toFixed(3)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
