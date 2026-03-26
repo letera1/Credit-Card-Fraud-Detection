@@ -145,8 +145,13 @@ async def root():
 async def predict(transaction: Transaction):
     """Predict fraud with advanced risk scoring and anomaly detection."""
     try:
+        # Extract only the features needed for prediction (exclude user_id and device_id)
+        transaction_data = transaction.dict()
+        user_id = transaction_data.pop('user_id', None)
+        device_id = transaction_data.pop('device_id', None)
+        
         # Get base prediction
-        result = inference_pipeline.predict(transaction.dict())
+        result = inference_pipeline.predict(transaction_data)
         
         # Generate transaction ID
         transaction_id = f"TXN-{datetime.now().strftime('%Y%m%d%H%M%S')}-{len(transaction_history)}"
@@ -213,10 +218,10 @@ async def predict(transaction: Transaction):
             alert_queue.append(alert)
         
         # Store risk score
-        if transaction.user_id:
-            if transaction.user_id not in risk_scores:
-                risk_scores[transaction.user_id] = []
-            risk_scores[transaction.user_id].append(risk_score)
+        if user_id:
+            if user_id not in risk_scores:
+                risk_scores[user_id] = []
+            risk_scores[user_id].append(risk_score)
         
         return enhanced_result
         
