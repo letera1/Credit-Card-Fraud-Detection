@@ -1,12 +1,60 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+interface SettingsState {
+  threshold: number
+  notifications: boolean
+  criticalOnly: boolean
+  autoRefresh: boolean
+  refreshInterval: number
+  apiEndpoint: string
+}
 
 export default function Settings() {
-  const [threshold, setThreshold] = useState(0.5)
-  const [notifications, setNotifications] = useState(true)
-  const [autoRefresh, setAutoRefresh] = useState(true)
-  const [refreshInterval, setRefreshInterval] = useState(5)
+  const [settings, setSettings] = useState<SettingsState>({
+    threshold: 0.5,
+    notifications: true,
+    criticalOnly: false,
+    autoRefresh: true,
+    refreshInterval: 5,
+    apiEndpoint: 'http://localhost:8000'
+  })
+  const [saved, setSaved] = useState(false)
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('fraudguard-settings')
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings))
+    }
+  }, [])
+
+  const updateSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
+    setSettings(prev => ({ ...prev, [key]: value }))
+    setSaved(false)
+  }
+
+  const saveSettings = () => {
+    localStorage.setItem('fraudguard-settings', JSON.stringify(settings))
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
+
+  const resetSettings = () => {
+    const defaultSettings: SettingsState = {
+      threshold: 0.5,
+      notifications: true,
+      criticalOnly: false,
+      autoRefresh: true,
+      refreshInterval: 5,
+      apiEndpoint: 'http://localhost:8000'
+    }
+    setSettings(defaultSettings)
+    localStorage.setItem('fraudguard-settings', JSON.stringify(defaultSettings))
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
 
   return (
     <div className="space-y-6">
@@ -17,6 +65,18 @@ export default function Settings() {
           Configure fraud detection system preferences
         </p>
       </div>
+
+      {/* Save Notification */}
+      {saved && (
+        <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-center space-x-3">
+          <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+            Settings saved successfully!
+          </span>
+        </div>
+      )}
 
       {/* Detection Settings */}
       <div className="bg-card rounded-xl border border-border p-6">
@@ -29,16 +89,16 @@ export default function Settings() {
               <label className="text-sm font-medium text-foreground">
                 Fraud Detection Threshold
               </label>
-              <span className="text-sm font-bold text-primary">{threshold.toFixed(2)}</span>
+              <span className="text-sm font-bold text-primary">{settings.threshold.toFixed(2)}</span>
             </div>
             <input
               type="range"
               min="0"
               max="1"
               step="0.01"
-              value={threshold}
-              onChange={(e) => setThreshold(parseFloat(e.target.value))}
-              className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
+              value={settings.threshold}
+              onChange={(e) => updateSetting('threshold', parseFloat(e.target.value))}
+              className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
             />
             <p className="text-xs text-muted-foreground mt-2">
               Transactions with fraud probability above this threshold will be flagged as fraudulent
@@ -105,14 +165,14 @@ export default function Settings() {
               </p>
             </div>
             <button
-              onClick={() => setNotifications(!notifications)}
+              onClick={() => updateSetting('notifications', !settings.notifications)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notifications ? 'bg-primary' : 'bg-secondary'
+                settings.notifications ? 'bg-primary' : 'bg-secondary'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  notifications ? 'translate-x-6' : 'translate-x-1'
+                  settings.notifications ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
@@ -126,9 +186,17 @@ export default function Settings() {
               </p>
             </div>
             <button
-              className="relative inline-flex h-6 w-11 items-center rounded-full bg-secondary"
+              onClick={() => updateSetting('criticalOnly', !settings.criticalOnly)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                settings.criticalOnly ? 'bg-primary' : 'bg-secondary'
+              }`}
+              disabled={!settings.notifications}
             >
-              <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-1" />
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  settings.criticalOnly ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
             </button>
           </div>
         </div>
@@ -147,35 +215,35 @@ export default function Settings() {
               </p>
             </div>
             <button
-              onClick={() => setAutoRefresh(!autoRefresh)}
+              onClick={() => updateSetting('autoRefresh', !settings.autoRefresh)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                autoRefresh ? 'bg-primary' : 'bg-secondary'
+                settings.autoRefresh ? 'bg-primary' : 'bg-secondary'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  autoRefresh ? 'translate-x-6' : 'translate-x-1'
+                  settings.autoRefresh ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>
           </div>
 
-          {autoRefresh && (
+          {settings.autoRefresh && (
             <div className="p-4 rounded-lg bg-secondary/50 border border-border">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-foreground">
                   Refresh Interval (seconds)
                 </label>
-                <span className="text-sm font-bold text-primary">{refreshInterval}s</span>
+                <span className="text-sm font-bold text-primary">{settings.refreshInterval}s</span>
               </div>
               <input
                 type="range"
                 min="1"
                 max="30"
                 step="1"
-                value={refreshInterval}
-                onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
-                className="w-full h-2 bg-background rounded-lg appearance-none cursor-pointer"
+                value={settings.refreshInterval}
+                onChange={(e) => updateSetting('refreshInterval', parseInt(e.target.value))}
+                className="w-full h-2 bg-background rounded-lg appearance-none cursor-pointer accent-primary"
               />
             </div>
           )}
@@ -193,9 +261,9 @@ export default function Settings() {
             </label>
             <input
               type="text"
-              value="http://localhost:8000"
-              readOnly
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground"
+              value={settings.apiEndpoint}
+              onChange={(e) => updateSetting('apiEndpoint', e.target.value)}
+              className="w-full px-4 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
 
@@ -213,11 +281,20 @@ export default function Settings() {
 
       {/* Actions */}
       <div className="flex items-center justify-between">
-        <button className="px-6 py-2 rounded-lg bg-secondary hover:bg-accent text-foreground text-sm font-medium transition-colors">
+        <button 
+          onClick={resetSettings}
+          className="px-6 py-2 rounded-lg bg-secondary hover:bg-accent text-foreground text-sm font-medium transition-colors"
+        >
           Reset to Defaults
         </button>
-        <button className="px-6 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors">
-          Save Changes
+        <button 
+          onClick={saveSettings}
+          className="px-6 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors flex items-center space-x-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Save Changes</span>
         </button>
       </div>
     </div>

@@ -41,19 +41,6 @@ export default function Home() {
       case 'overview':
         return (
           <>
-            {/* Welcome Section */}
-            <div className="mb-6">
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                  <span className="text-xl">👤</span>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Welcome to FraudGuard AI</h1>
-                  <p className="text-sm text-muted-foreground">Advanced fraud detection powered by machine learning</p>
-                </div>
-              </div>
-            </div>
-
             {/* Analytics Dashboard */}
             <AnalyticsDashboard />
 
