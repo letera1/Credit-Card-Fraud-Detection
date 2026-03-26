@@ -3,17 +3,28 @@
 interface RiskScoreCardProps {
   score: number
   maxScore?: number
+  label?: string
 }
 
-export default function RiskScoreCard({ score, maxScore = 1000 }: RiskScoreCardProps) {
+export default function RiskScoreCard({ score, maxScore = 100, label = 'Average Risk Score' }: RiskScoreCardProps) {
   const percentage = (score / maxScore) * 100
   const circumference = 2 * Math.PI * 70
   const strokeDashoffset = circumference - (percentage / 100) * circumference
 
+  // Determine risk level and color
+  const getRiskLevel = () => {
+    if (score >= 80) return { level: 'Critical', color: '#ef4444' }
+    if (score >= 60) return { level: 'High', color: '#f97316' }
+    if (score >= 30) return { level: 'Medium', color: '#eab308' }
+    return { level: 'Low', color: '#22c55e' }
+  }
+
+  const risk = getRiskLevel()
+
   return (
     <div className="bg-card rounded-xl border border-border p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-foreground">Risk Score</h3>
+        <h3 className="text-lg font-bold text-foreground">{label}</h3>
         <button className="text-muted-foreground hover:text-foreground">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -39,7 +50,7 @@ export default function RiskScoreCard({ score, maxScore = 1000 }: RiskScoreCardP
               cx="96"
               cy="96"
               r="70"
-              stroke="url(#gradient)"
+              stroke={risk.color}
               strokeWidth="12"
               fill="none"
               strokeLinecap="round"
@@ -47,12 +58,6 @@ export default function RiskScoreCard({ score, maxScore = 1000 }: RiskScoreCardP
               strokeDashoffset={strokeDashoffset}
               className="transition-all duration-1000 ease-out"
             />
-            <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#f97316" />
-                <stop offset="100%" stopColor="#fb923c" />
-              </linearGradient>
-            </defs>
           </svg>
 
           {/* Center Content */}
@@ -60,8 +65,11 @@ export default function RiskScoreCard({ score, maxScore = 1000 }: RiskScoreCardP
             <div className="text-center">
               <p className="text-xs text-muted-foreground mb-1">Score</p>
               <p className="text-4xl font-bold text-foreground">{score}</p>
-              <div className="mt-3 px-3 py-1 rounded-full bg-orange-500/20 border border-orange-500/30">
-                <p className="text-xs font-medium text-orange-500">High</p>
+              <div className="mt-3 px-3 py-1 rounded-full border" style={{ 
+                backgroundColor: `${risk.color}20`, 
+                borderColor: `${risk.color}30` 
+              }}>
+                <p className="text-xs font-medium" style={{ color: risk.color }}>{risk.level}</p>
               </div>
             </div>
           </div>

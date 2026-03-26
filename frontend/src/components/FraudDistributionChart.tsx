@@ -1,19 +1,19 @@
 'use client'
 
-export default function ThreatVirusChart() {
-  const threats = [
-    { name: 'BONYPOD', percentage: 25, color: '#a855f7' },
-    { name: 'Malware', percentage: 20, color: '#ec4899' },
-    { name: 'Trojan', percentage: 30, color: '#3b82f6' },
-    { name: 'Spear', percentage: 25, color: '#06b6d4' },
+export default function FraudDistributionChart() {
+  const fraudTypes = [
+    { name: 'Card Not Present', percentage: 35, color: '#a855f7' },
+    { name: 'Account Takeover', percentage: 25, color: '#ec4899' },
+    { name: 'Identity Theft', percentage: 20, color: '#3b82f6' },
+    { name: 'Other', percentage: 20, color: '#06b6d4' },
   ]
 
   // Calculate donut segments
   let currentAngle = 0
-  const segments = threats.map((threat) => {
-    const angle = (threat.percentage / 100) * 360
+  const segments = fraudTypes.map((type) => {
+    const angle = (type.percentage / 100) * 360
     const segment = {
-      ...threat,
+      ...type,
       startAngle: currentAngle,
       endAngle: currentAngle + angle,
     }
@@ -24,7 +24,7 @@ export default function ThreatVirusChart() {
   return (
     <div className="bg-card rounded-xl border border-border p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-foreground">Threats By Virus</h3>
+        <h3 className="text-lg font-bold text-foreground">Fraud Distribution</h3>
         <button className="text-muted-foreground hover:text-foreground">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -35,19 +35,22 @@ export default function ThreatVirusChart() {
       <div className="flex items-center justify-between">
         {/* Legend */}
         <div className="space-y-3 flex-1">
-          {threats.map((threat, idx) => (
-            <div key={idx} className="flex items-center space-x-3">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: threat.color }}
-              />
-              <span className="text-sm text-muted-foreground">{threat.name}</span>
+          {fraudTypes.map((type, idx) => (
+            <div key={idx} className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: type.color }}
+                />
+                <span className="text-sm text-muted-foreground">{type.name}</span>
+              </div>
+              <span className="text-sm font-medium text-foreground">{type.percentage}%</span>
             </div>
           ))}
         </div>
 
         {/* Donut Chart */}
-        <div className="relative w-32 h-32">
+        <div className="relative w-32 h-32 ml-6">
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
             {segments.map((segment, idx) => {
               const startAngle = (segment.startAngle * Math.PI) / 180
@@ -74,7 +77,8 @@ export default function ThreatVirusChart() {
 
           {/* Center Text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-2xl font-bold text-foreground">65%</p>
+            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="text-xl font-bold text-foreground">100%</p>
           </div>
         </div>
       </div>
