@@ -1,6 +1,7 @@
 """FastAPI application for fraud detection service."""
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict, List
 import logging
@@ -16,6 +17,15 @@ app = FastAPI(
     title="Credit Card Fraud Detection API",
     description="Real-time fraud detection service",
     version="1.0.0",
+)
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Initialize inference pipeline
