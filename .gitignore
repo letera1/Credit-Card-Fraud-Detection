@@ -27,18 +27,16 @@ wheels/
 .ipynb_checkpoints
 *.ipynb_checkpoints/
 
-# Data
-data/creditcard.csv
+# Data (keep .gitkeep)
+data/*.csv
 data/processed/
-*.csv
 
-# Models
+# Models (keep .gitkeep, but ignore model files)
 models/*.pkl
 models/*.joblib
 
-# Outputs
-outputs/plots/*.png
-outputs/results/*.csv
+# Logs
+logs/*.log
 
 # IDE
 .vscode/
@@ -51,5 +49,24 @@ outputs/results/*.csv
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Reports (keep structure, ignore generated reports)
+reports/*.json
+reports/*.html
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
