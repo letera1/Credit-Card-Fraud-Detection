@@ -1,123 +1,82 @@
-# Fraud Detection AI - Makefile
-# Common Docker and deployment commands
+# ══════════════════════════════════════════════════════════════
+#  Credit Card Fraud Detection — Makefile
+#  Docker image: tuta699/credit-card-fraud-detection
+# ══════════════════════════════════════════════════════════════
 
-.PHONY: help build up down logs clean rebuild restart test backend frontend
+IMAGE   := tuta699/credit-card-fraud-detection
+TAG     := latest
+PORT    := 8000
 
-# Default target
+.PHONY: help install install-dev lint format test train \
+        docker-build docker-run docker-stop docker-push docker-clean
+
+# ── Help ────────────────────────────────────────────────────
 help:
-	@echo "Fraud Detection AI - Available Commands"
-	@echo "========================================"
 	@echo ""
-	@echo "Development:"
-	@echo "  make build        - Build Docker images"
-	@echo "  make up           - Start all services"
-	@echo "  make down         - Stop all services"
-	@echo "  make restart      - Restart all services"
-	@echo "  make logs         - View logs (follow mode)"
-	@echo "  make rebuild      - Rebuild and restart"
+	@echo "  Credit Card Fraud Detection — Available commands"
+	@echo "  ──────────────────────────────────────────────────"
+	@echo "  Local development"
+	@echo "    make install        Install production deps"
+	@echo "    make install-dev    Install all deps incl. dev/test"
+	@echo "    make lint           Run flake8 + isort checks"
+	@echo "    make format         Auto-format with black + isort"
+	@echo "    make test           Run test suite with coverage"
+	@echo "    make train          Train the ML model"
 	@echo ""
-	@echo "Production:"
-	@echo "  make prod         - Start in production mode"
-	@echo "  make prod-build   - Build production images"
-	@echo ""
-	@echo "Services:"
-	@echo "  make backend      - Start backend only"
-	@echo "  make frontend     - Start frontend only"
-	@echo ""
-	@echo "Maintenance:"
-	@echo "  make clean        - Remove containers and volumes"
-	@echo "  make prune        - Remove dangling images"
-	@echo "  make test         - Run tests"
-	@echo "  make train        - Train ML model"
+	@echo "  Docker"
+	@echo "    make docker-build   Build Docker image"
+	@echo "    make docker-run     Run API container locally"
+	@echo "    make docker-stop    Stop and remove container"
+	@echo "    make docker-push    Push image to Docker Hub"
+	@echo "    make docker-clean   Remove image locally"
 	@echo ""
 
-# Build Docker images
-build:
-	docker-compose build
+# ── Local Development ───────────────────────────────────────
+install:
+	pip install -r requirements.txt
 
-# Start all services
-up:
-	docker-compose up -d
+install-dev:
+	pip install -r requirements-dev.txt
 
-# Stop all services
-down:
-	docker-compose down
+lint:
+	flake8 src/ tests/ --max-line-length=100
+	isort --check-only src/ tests/
 
-# Restart all services
-restart:
-	docker-compose restart
+format:
+	black src/ tests/ --line-length 100
+	isort src/ tests/
 
-# View logs
-logs:
-	docker-compose logs -f
-
-# Backend logs
-logs-backend:
-	docker-compose logs -f backend
-
-# Frontend logs
-logs-frontend:
-	docker-compose logs -f frontend
-
-# Rebuild and restart
-rebuild:
-	docker-compose down
-	docker-compose build --no-cache
-	docker-compose up -d
-
-# Production deployment
-prod:
-	docker-compose -f docker-compose.prod.yml up -d
-
-# Production build
-prod-build:
-	docker-compose -f docker-compose.prod.yml build --no-cache
-
-# Start backend only
-backend:
-	docker-compose up -d backend
-
-# Start frontend only
-frontend:
-	docker-compose up -d frontend
-
-# Clean up containers and volumes
-clean:
-	docker-compose down -v
-	docker system prune -f
-
-# Prune dangling images
-prune:
-	docker image prune -f
-
-# Run tests
 test:
-	docker-compose run --rm backend pytest
+	pytest tests/ -v --cov=src --cov-report=term-missing --cov-report=html
 
-# Train ML model
 train:
-	docker-compose run --rm backend python train_advanced_model.py
+	python train_advanced_model.py
 
-# Health check
-health:
-	@echo "Checking backend health..."
-	curl -f http://localhost:8000/health || echo "Backend not healthy"
-	@echo ""
-	@echo "Checking frontend..."
-	curl -f http://localhost:3000 || echo "Frontend not healthy"
+# ── Docker ──────────────────────────────────────────────────
+docker-build:
+	docker build \
+	  --target runtime \
+	  -t $(IMAGE):$(TAG) \
+	  -t $(IMAGE):$(shell git rev-parse --short HEAD 2>/dev/null || echo "local") \
+	  .
 
-# Show running containers
-ps:
-	docker-compose ps
+docker-run:
+	docker run -d \
+	  --name fraud-detection-api \
+	  -p $(PORT):8000 \
+	  -v $(PWD)/models:/app/models:ro \
+	  -v $(PWD)/config:/app/config:ro \
+	  -e APP_ENV=development \
+	  $(IMAGE):$(TAG)
+	@echo "API running → http://localhost:$(PORT)"
+	@echo "Docs       → http://localhost:$(PORT)/docs"
 
-# Shell access to backend
-shell-backend:
-	docker-compose exec backend /bin/bash
+docker-stop:
+	docker stop fraud-detection-api 2>/dev/null || true
+	docker rm   fraud-detection-api 2>/dev/null || true
 
-# Shell access to frontend
-shell-frontend:
-	docker-compose exec frontend /bin/sh
+docker-push: docker-build
+	docker push $(IMAGE):$(TAG)
 
-# View resource usage
-stats:
-	docker stats fraud-detection-backend fraud-detection-frontend
+docker-clean: docker-stop
+	docker rmi $(IMAGE):$(TAG) 2>/dev/null || true
