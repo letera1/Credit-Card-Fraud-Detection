@@ -36,11 +36,23 @@ const config: Config = {
           foreground: 'hsl(var(--card-foreground))',
         },
       },
-      borderRadius: {
-        lg: '0.75rem',
-        md: '0.5rem',
-        sm: '0.25rem',
+      fontFamily: {
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-fira-code)', 'monospace'],
       },
+      keyframes: {
+        pulseBorder: {
+          '0%, 100%': { borderColor: 'rgba(239, 68, 68, 0.2)' },
+          '50%': { borderColor: 'rgba(239, 68, 68, 0.8)' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        }
+      },
+      animation: {
+        'pulse-border': 'pulseBorder 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'shimmer': 'shimmer 2s infinite',
+      }
     },
   },
   plugins: [],

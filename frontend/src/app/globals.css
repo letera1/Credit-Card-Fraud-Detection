@@ -4,46 +4,49 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 271 91% 65%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    /* Base Colors - Deep Dark Mode */
+    --background: 230 25% 6%; /* #0B0E14 */
+    --foreground: 210 40% 98%;
+
+    /* Glassmorphic Cards */
+    --card: 226 24% 10%; /* #131722 */
+    --card-foreground: 210 40% 98%;
+    
+    /* Neon Accents */
+    --primary: 271 91% 65%; /* Purple Glow */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 199 89% 48%; /* Cyber Blue */
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Muted states */
+    --muted: 226 24% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    /* Utility */
+    --accent: 271 91% 65%;
+    --accent-foreground: 0 0% 100%;
+    --danger: 348 83% 47%;
+    
+    /* Borders */
+    --border: 226 24% 15%;
+    --input: 226 24% 15%;
     --ring: 271 91% 65%;
   }
 
   .dark {
-    --background: 222 47% 11%;
+    /* Ensure it forces dark by default */
+    --background: 230 25% 6%; 
     --foreground: 210 40% 98%;
-    --card: 223 47% 14%;
-    --card-foreground: 210 40% 98%;
-    --primary: 271 91% 65%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 222 47% 18%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 222 47% 18%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 222 47% 18%;
-    --accent-foreground: 210 40% 98%;
-    --border: 222 47% 20%;
-    --input: 222 47% 18%;
-    --ring: 271 91% 65%;
   }
 }
 
 @layer base {
   body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground font-sans;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(168, 85, 247, 0.05), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.05), transparent 25%);
+    background-attachment: fixed;
   }
 }
 
@@ -56,15 +59,39 @@
     scrollbar-width: none;
   }
   
-  .gradient-purple {
-    background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  /* Glassmorphic Panels */
+  .glass-panel {
+    @apply bg-card/60 backdrop-blur-xl border border-white/5 shadow-2xl;
   }
   
-  .gradient-blue {
-    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+  /* Intense Glows for Fraud Alerts */
+  .glow-danger {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.15), inset 0 0 20px rgba(239, 68, 68, 0.05);
+  }
+  .glow-danger-strong {
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.4), inset 0 0 20px rgba(239, 68, 68, 0.2);
+    @apply border-red-500/50;
   }
   
-  .gradient-orange {
-    background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  /* Gradients */
+  .gradient-purple-blue {
+    background: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+  }
+  
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-400 to-blue-400;
+  }
+
+  /* SVG Animation Paths */
+  .path-draw {
+    stroke-dasharray: 2000;
+    stroke-dashoffset: 2000;
+    animation: draw 2s ease-out forwards;
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
   }
 }

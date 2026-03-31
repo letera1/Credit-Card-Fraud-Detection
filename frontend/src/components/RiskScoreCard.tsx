@@ -1,85 +1,109 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 interface RiskScoreCardProps {
   score: number
-  maxScore?: number
-  label?: string
+  maxScore: number
+  label: string
 }
 
-export default function RiskScoreCard({ score, maxScore = 100, label = 'Average Risk Score' }: RiskScoreCardProps) {
-  const percentage = (score / maxScore) * 100
-  const circumference = 2 * Math.PI * 70
-  const strokeDashoffset = circumference - (percentage / 100) * circumference
+export default function RiskScoreCard({ score, maxScore, label }: RiskScoreCardProps) {
+  const [animatedScore, setAnimatedScore] = useState(0)
+  
+  useEffect(() => {
+    // Animate score from 0 to actual value
+    const timer = setTimeout(() => {
+      setAnimatedScore(score)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [score])
 
-  // Determine risk level and color
-  const getRiskLevel = () => {
-    if (score >= 80) return { level: 'Critical', color: '#ef4444' }
-    if (score >= 60) return { level: 'High', color: '#f97316' }
-    if (score >= 30) return { level: 'Medium', color: '#eab308' }
-    return { level: 'Low', color: '#22c55e' }
+  const percentage = (animatedScore / maxScore) * 100
+  
+  // Choose color based on risk severity
+  let colorClass = 'text-green-500'
+  let strokeClass = 'stroke-green-500'
+  let glowClass = 'shadow-[0_0_30px_rgba(34,197,94,0.3)]'
+  let labelText = 'SAFE'
+  
+  if (percentage >= 80) {
+    colorClass = 'text-red-500'
+    strokeClass = 'stroke-red-500'
+    glowClass = 'shadow-[0_0_40px_rgba(239,68,68,0.5)]'
+    labelText = 'CRITICAL'
+  } else if (percentage >= 60) {
+    colorClass = 'text-orange-500'
+    strokeClass = 'stroke-orange-500'
+    glowClass = 'shadow-[0_0_30px_rgba(249,115,22,0.4)]'
+    labelText = 'HIGH RISK'
+  } else if (percentage >= 30) {
+    colorClass = 'text-yellow-500'
+    strokeClass = 'stroke-yellow-500'
+    glowClass = 'shadow-[0_0_30px_rgba(234,179,8,0.3)]'
+    labelText = 'MODERATE'
   }
 
-  const risk = getRiskLevel()
+  // SVG Circle math
+  const radius = 60
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference - (percentage / 100) * circumference
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-foreground">{label}</h3>
-        <button className="text-muted-foreground hover:text-foreground">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-          </svg>
-        </button>
+    <div className="glass-panel rounded-2xl p-6 h-full flex flex-col items-center justify-center relative overflow-hidden group">
+      {/* Background glow mesh */}
+      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-3xl opacity-20 transition-colors duration-700 ${
+        percentage >= 80 ? 'bg-red-600' :
+        percentage >= 60 ? 'bg-orange-600' :
+        percentage >= 30 ? 'bg-yellow-600' : 'bg-green-600'
+      }`}></div>
+
+      <p className="text-[11px] font-mono font-semibold text-slate-400 uppercase tracking-widest absolute top-6 left-6 flex items-center">
+        <svg className="w-3 h-3 mr-2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        {label}
+      </p>
+
+      {/* SVG Radial Gauge */}
+      <div className="relative w-40 h-40 mt-6 flex items-center justify-center">
+        {/* Track Circle */}
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 140 140">
+          <circle
+            cx="70"
+            cy="70"
+            r={radius}
+            className="stroke-white/5"
+            strokeWidth="12"
+            fill="transparent"
+          />
+          {/* Progress Circle */}
+          <circle
+            cx="70"
+            cy="70"
+            r={radius}
+            className={`${strokeClass} drop-shadow-[0_0_8px_currentColor] transition-all duration-1000 ease-out`}
+            strokeWidth="12"
+            fill="transparent"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </svg>
+
+        {/* Center Text */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className={`text-4xl font-mono font-bold tracking-tighter ${colorClass}`}>
+            {animatedScore.toFixed(0)}
+          </span>
+          <span className="text-[10px] text-slate-500 font-mono mt-1">/100</span>
+        </div>
       </div>
 
-      <div className="flex items-center justify-center">
-        <div className="relative w-48 h-48">
-          {/* Background Circle */}
-          <svg className="w-full h-full transform -rotate-90">
-            <circle
-              cx="96"
-              cy="96"
-              r="70"
-              stroke="currentColor"
-              strokeWidth="12"
-              fill="none"
-              className="text-secondary"
-            />
-            {/* Progress Circle */}
-            <circle
-              cx="96"
-              cy="96"
-              r="70"
-              stroke={risk.color}
-              strokeWidth="12"
-              fill="none"
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              className="transition-all duration-1000 ease-out"
-            />
-          </svg>
-
-          {/* Center Content */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Score</p>
-              <p className="text-4xl font-bold text-foreground">{score}</p>
-              <div className="mt-3 px-3 py-1 rounded-full border" style={{ 
-                backgroundColor: `${risk.color}20`, 
-                borderColor: `${risk.color}30` 
-              }}>
-                <p className="text-xs font-medium" style={{ color: risk.color }}>{risk.level}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Min/Max Labels */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-muted-foreground px-2">
-            <span>0</span>
-            <span>{maxScore}</span>
-          </div>
-        </div>
+      <div className="mt-6 text-center z-10">
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-widest border border-current ${colorClass} bg-current/10`}>
+          {labelText} STATUS
+        </span>
       </div>
     </div>
   )

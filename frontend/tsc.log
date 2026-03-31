@@ -1,0 +1,4 @@
+src/components/ResultCard.tsx(19,33): error TS2339: Property 'shap_explanation' does not exist on type 'PredictionResult'.
+src/components/ResultCard.tsx(48,78): error TS2339: Property 'transaction_id' does not exist on type 'PredictionResult'.
+src/components/ResultCard.tsx(71,21): error TS2339: Property 'risk_level' does not exist on type 'PredictionResult'.
+src/components/ResultCard.tsx(88,21): error TS2339: Property 'recommended_action' does not exist on type 'PredictionResult'.

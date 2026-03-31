@@ -36,6 +36,16 @@ export interface PredictionResult {
   is_fraud: boolean
   threshold: number
   confidence: number
+  
+  // Optional fields for advanced UI rendering
+  transaction_id?: string
+  risk_level?: string
+  recommended_action?: string
+  shap_explanation?: {
+    feature_names: string[]
+    shap_values: number[]
+    base_value: number
+  }
 }
 
 export interface ApiError {

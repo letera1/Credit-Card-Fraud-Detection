@@ -1,0 +1,45 @@
+
+> fraud-detection-frontend@1.0.0 build
+> next build
+
+   Γû▓ Next.js 15.5.14
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./src/components/PredictionForm.tsx
+Error:   x Expected unicode escape
+     ,-[C:\Users\LTR\Documents\projects\machineLearning\Credit-Card-Fraud-Detection\frontend\src\components\PredictionForm.tsx:122:1]
+ 119 |               value={rawInput}
+ 120 |               onChange={(e) => setRawInput(e.target.value)}
+ 121 |               className="flex-1 w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs font-mono text-green-400 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none scrollbar-hide shadow-inner"
+ 122 |               placeholder="{\n  \"V1\": 0.123,\n  \"V2\": -1.456\n  ...\n}"
+     :                                     ^
+ 123 |               spellCheck="false"
+ 124 |             />
+ 125 |           </div>
+     `----
+  x Expected '</', got 'string literal (: 0.123,
+  |   "V2": -1.456
+  |   ...
+  | }, ": 0.123,\n  \"V2\": -1.456\n  ...\n}")'
+     ,-[C:\Users\LTR\Documents\projects\machineLearning\Credit-Card-Fraud-Detection\frontend\src\components\PredictionForm.tsx:122:1]
+ 119 |               value={rawInput}
+ 120 |               onChange={(e) => setRawInput(e.target.value)}
+ 121 |               className="flex-1 w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs font-mono text-green-400 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none scrollbar-hide shadow-inner"
+ 122 |               placeholder="{\n  \"V1\": 0.123,\n  \"V2\": -1.456\n  ...\n}"
+     :                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 123 |               spellCheck="false"
+ 124 |             />
+ 125 |           </div>
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/PredictionForm.tsx
+./src/app/page.tsx
+
+
+> Build failed because of webpack errors

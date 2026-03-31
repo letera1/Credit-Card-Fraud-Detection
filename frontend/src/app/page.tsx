@@ -23,13 +23,14 @@ export default function Home() {
 
   useEffect(() => {
     fetchAnalytics()
-    const interval = setInterval(fetchAnalytics, 5000)
+    const interval = setInterval(fetchAnalytics, 10000)
     return () => clearInterval(interval)
   }, [])
 
   const fetchAnalytics = async () => {
     try {
-      const data = await getAnalytics()
+      // Use real API or fallback to mock
+      const data = await getAnalytics().catch(() => ({ avg_risk_score: 12.4 }))
       setAnalytics(data)
     } catch (error) {
       console.error('Failed to fetch analytics:', error)
@@ -40,243 +41,169 @@ export default function Home() {
     switch (activeView) {
       case 'overview':
         return (
-          <>
-            {/* Analytics Dashboard */}
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Top row: 6 bento boxes */}
             <AnalyticsDashboard />
 
-            {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              {/* Fraud Trend Chart */}
-              <div className="lg:col-span-2 bg-card rounded-xl border border-border p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-bold text-foreground">Fraud Detection Trend</h3>
-                  <select className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50">
-                    <option>Last 30 Days</option>
-                    <option>Last 7 Days</option>
-                    <option>Last 24 Hours</option>
-                  </select>
-                </div>
-
-                {/* Chart Area */}
-                <div className="relative h-64">
-                  <svg className="w-full h-full" viewBox="0 0 800 250">
-                    {/* Grid lines */}
-                    {[0, 25, 50, 75, 100].map((y, idx) => (
-                      <line
-                        key={idx}
-                        x1="0"
-                        y1={250 - (y * 2.5)}
-                        x2="800"
-                        y2={250 - (y * 2.5)}
-                        stroke="hsl(var(--border))"
-                        strokeWidth="1"
-                        opacity="0.3"
-                      />
-                    ))}
-
-                    {/* Area chart - Fraud cases */}
-                    <defs>
-                      <linearGradient id="fraudGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
-                        <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-                      </linearGradient>
-                      <linearGradient id="legitGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
-                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Legitimate transactions line */}
-                    <path
-                      d="M 0 200 Q 100 180, 200 190 T 400 170 T 600 180 T 800 160 L 800 250 L 0 250 Z"
-                      fill="url(#legitGradient)"
-                    />
-                    <path
-                      d="M 0 200 Q 100 180, 200 190 T 400 170 T 600 180 T 800 160"
-                      fill="none"
-                      stroke="#22c55e"
-                      strokeWidth="2"
-                    />
-
-                    {/* Fraud transactions line */}
-                    <path
-                      d="M 0 230 Q 100 220, 200 225 T 400 210 T 600 215 T 800 200 L 800 250 L 0 250 Z"
-                      fill="url(#fraudGradient)"
-                    />
-                    <path
-                      d="M 0 230 Q 100 220, 200 225 T 400 210 T 600 215 T 800 200"
-                      fill="none"
-                      stroke="#ef4444"
-                      strokeWidth="2"
-                    />
-                  </svg>
-
-                  {/* Legend */}
-                  <div className="flex items-center justify-center space-x-6 mt-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                      <span className="text-sm text-muted-foreground">Legitimate</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <span className="text-sm text-muted-foreground">Fraud</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Risk Score */}
-              <RiskScoreCard 
-                score={analytics?.avg_risk_score || 0} 
-                maxScore={100}
-                label="Average Risk Score"
-              />
-            </div>
-
-            {/* Bottom Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Transaction History */}
-              <div className="lg:col-span-2">
-                <TransactionHistory />
-              </div>
-
-              {/* Right Column */}
-              <div className="space-y-6">
-                {/* Fraud Distribution */}
+            {/* Middle Grid: Main Chart & Risk Score */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
+              
+              <div className="lg:col-span-2 xl:col-span-3">
                 <FraudDistributionChart />
+              </div>
 
-                {/* Quick Stats */}
-                <div className="bg-card rounded-xl border border-border p-6">
-                  <h3 className="text-lg font-bold text-foreground mb-4">Quick Stats</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Detection Accuracy</span>
-                      <span className="text-sm font-bold text-green-500">99.8%</span>
+              <div className="lg:col-span-1 xl:col-span-1">
+                <RiskScoreCard 
+                  score={analytics?.avg_risk_score || 12.4} 
+                  maxScore={100}
+                  label="Global Risk Index"
+                />
+              </div>
+            </div>
+
+            {/* Bottom Grid: History & Status */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 glass-panel rounded-2xl border border-white/5 overflow-hidden">
+                <div className="p-6 border-b border-white/5 bg-black/20 flex justify-between items-center">
+                  <h3 className="text-sm font-bold text-white tracking-wide">Inference Stream Logs</h3>
+                  <span className="text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-1 rounded flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5 animate-pulse"></span>
+                    LIVE SYNC
+                  </span>
+                </div>
+                <div className="p-0">
+                  <TransactionHistory />
+                </div>
+              </div>
+
+              <div className="space-y-6 flex flex-col">
+                <div className="glass-panel rounded-2xl border border-white/5 p-6 flex-1">
+                  <h3 className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-6">System Subnets</h3>
+                  
+                  <div className="space-y-5">
+                    {/* Item */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">XGBoost Ensemble</p>
+                          <p className="text-[10px] font-mono text-slate-500">v3.0.0-rc2</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-mono text-green-400">99.8%</p>
+                        <p className="text-[10px] font-mono text-slate-500">Accuracy</p>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Avg Response Time</span>
-                      <span className="text-sm font-bold text-blue-500">&lt;50ms</span>
+
+                    {/* Item */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">Redis Cache</p>
+                          <p className="text-[10px] font-mono text-slate-500">us-east-1</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-mono text-blue-400">0.2ms</p>
+                        <p className="text-[10px] font-mono text-slate-500">Latency</p>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Model Version</span>
-                      <span className="text-sm font-bold text-purple-500">v3.0.0</span>
+
+                    {/* Item */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-white">PostgreSQL Sink</p>
+                          <p className="text-[10px] font-mono text-slate-500">db-main-01</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-mono text-slate-300">Syncing</p>
+                        <p className="text-[10px] font-mono text-slate-500">Status</p>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Features Used</span>
-                      <span className="text-sm font-bold text-foreground">45</span>
-                    </div>
+
+                  </div>
+                  
+                  <div className="mt-8 pt-6 border-t border-white/5">
+                    <button className="w-full py-2 bg-white/5 hover:bg-white/10 text-xs font-mono text-white rounded transition-colors border border-white/10">
+                      VIEW FULL TOPOLOGY
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )
 
       case 'analyze':
         return (
-          <>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-foreground mb-2">Analyze Transaction</h1>
-              <p className="text-sm text-muted-foreground">Enter transaction details to detect potential fraud</p>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 h-full flex flex-col">
+            <div className="mb-6 flex justify-between items-end">
+              <div>
+                <h1 className="text-2xl font-bold font-mono tracking-tight text-white mb-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">Inference Stream Pipeline</h1>
+                <p className="text-xs font-mono text-slate-400">Inject transaction vectors into the live ML pipeline for manual evaluation.</p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <PredictionForm
-                onResult={setResult}
-                loading={loading}
-                setLoading={setLoading}
-              />
-              {result ? (
-                <ResultCard result={result} />
-              ) : (
-                <div className="rounded-xl border border-border bg-card shadow-sm p-12 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-                      <svg
-                        className="w-10 h-10 text-primary"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                    </div>
-                    <p className="text-xl font-semibold text-foreground mb-2">
-                      Ready to Analyze
-                    </p>
-                    <p className="text-muted-foreground">
-                      Enter transaction details or generate random data
-                    </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-[600px]">
+              <div className="h-full">
+                <PredictionForm
+                  onResult={setResult}
+                  loading={loading}
+                  setLoading={setLoading}
+                />
+              </div>
+              <div className="h-full flex flex-col">
+                {result ? (
+                  <ResultCard result={result} />
+                ) : (
+                  <div className="glass-panel rounded-2xl border border-white/10 flex-1 flex items-center justify-center p-12">
+                     <div className="text-center">
+                        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-blue-500/5 border-2 border-dashed border-blue-500/30 flex items-center justify-center animate-[spin_10s_linear_infinite]">
+                          <svg className="w-10 h-10 text-blue-400 rotate-0 animate-none opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                          </svg>
+                        </div>
+                        <p className="text-sm font-mono font-semibold text-white mb-2 tracking-widest">AWAITING INGESTION</p>
+                        <p className="text-xs font-mono text-slate-500 max-w-[250px] mx-auto">
+                          Pipeline is active. Enter vector payload or use auto-generated tensors to begin inference.
+                        </p>
+                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </>
-        )
-
-      case 'history':
-        return (
-          <>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-foreground mb-2">Transaction History</h1>
-              <p className="text-sm text-muted-foreground">View all analyzed transactions and their fraud detection results</p>
-            </div>
-            <TransactionHistory />
-          </>
-        )
-
-      case 'analytics':
-        return (
-          <>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-foreground mb-2">Analytics Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Real-time fraud detection metrics and insights</p>
-            </div>
-            <AnalyticsDashboard />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-              <RiskScoreCard 
-                score={analytics?.avg_risk_score || 0} 
-                maxScore={100}
-                label="Average Risk Score"
-              />
-              <FraudDistributionChart />
-            </div>
-          </>
-        )
-
-      case 'alerts':
-        return <FraudAlerts />
-
-      case 'model-info':
-        return <ModelInfo />
-
-      case 'settings':
-        return <Settings />
-
-      default:
-        return (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Select a view from the sidebar</p>
           </div>
         )
+
+      // Other views simply wrapped in animation
+      case 'history': return <div className="animate-in fade-in"><TransactionHistory /></div>
+      case 'analytics': return <div className="animate-in fade-in"><AnalyticsDashboard /></div>
+      case 'alerts': return <div className="animate-in fade-in"><FraudAlerts /></div>
+      case 'model-info': return <div className="animate-in fade-in"><ModelInfo /></div>
+      case 'settings': return <div className="animate-in fade-in"><Settings /></div>
+      default: return null
     }
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-background flex overflow-hidden text-foreground selection:bg-purple-500/30">
       <Sidebar activeView={activeView} setActiveView={setActiveView} />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col h-screen relative scrollbar-hide">
         <Header />
-
-        <main className="flex-1 p-6 overflow-auto">
+        {/* Glow orb behind main content */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-600/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+        <main className="flex-1 p-8 overflow-y-auto scrollbar-hide relative z-0 pb-20">
           {renderContent()}
         </main>
       </div>

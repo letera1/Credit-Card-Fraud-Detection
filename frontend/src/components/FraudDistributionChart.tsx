@@ -1,85 +1,101 @@
 'use client'
 
 export default function FraudDistributionChart() {
-  const fraudTypes = [
-    { name: 'Card Not Present', percentage: 35, color: '#a855f7' },
-    { name: 'Account Takeover', percentage: 25, color: '#ec4899' },
-    { name: 'Identity Theft', percentage: 20, color: '#3b82f6' },
-    { name: 'Other', percentage: 20, color: '#06b6d4' },
-  ]
-
-  // Calculate donut segments
-  let currentAngle = 0
-  const segments = fraudTypes.map((type) => {
-    const angle = (type.percentage / 100) * 360
-    const segment = {
-      ...type,
-      startAngle: currentAngle,
-      endAngle: currentAngle + angle,
-    }
-    currentAngle += angle
-    return segment
-  })
-
   return (
-    <div className="bg-card rounded-xl border border-border p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-foreground">Fraud Distribution</h3>
-        <button className="text-muted-foreground hover:text-foreground">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-          </svg>
-        </button>
+    <div className="glass-panel border border-white/5 rounded-2xl p-6 h-full relative overflow-hidden group">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -z-10 group-hover:bg-blue-500/20 transition-all duration-700"></div>
+      
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h3 className="text-sm font-bold text-white tracking-wide">Threat Vector Distribution</h3>
+          <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase tracking-widest">PCA Manifold Analysis</p>
+        </div>
+        <div className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-slate-300">
+          Last 24h Window
+        </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        {/* Legend */}
-        <div className="space-y-3 flex-1">
-          {fraudTypes.map((type, idx) => (
-            <div key={idx} className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: type.color }}
-                />
-                <span className="text-sm text-muted-foreground">{type.name}</span>
-              </div>
-              <span className="text-sm font-medium text-foreground">{type.percentage}%</span>
-            </div>
-          ))}
+      <div className="relative h-48 w-full mt-4 flex items-center justify-center">
+        {/* Advanced SVG implementation of a radar/polar chart style or layered area */}
+        <svg className="w-full h-full" viewBox="0 0 400 200">
+          {/* Grid lines */}
+          <path d="M 0 160 L 400 160" stroke="rgba(255,255,255,0.05)" strokeWidth="1" strokeDasharray="4 4"/>
+          <path d="M 0 120 L 400 120" stroke="rgba(255,255,255,0.05)" strokeWidth="1" strokeDasharray="4 4"/>
+          <path d="M 0 80 L 400 80" stroke="rgba(255,255,255,0.05)" strokeWidth="1" strokeDasharray="4 4"/>
+          <path d="M 0 40 L 400 40" stroke="rgba(255,255,255,0.05)" strokeWidth="1" strokeDasharray="4 4"/>
+
+          <defs>
+            <linearGradient id="fraudGradientNew" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="legitGradientNew" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Legitimate Volume Area */}
+          <path
+            d="M 0 160 Q 50 140, 100 150 T 200 130 T 300 145 T 400 120 L 400 200 L 0 200 Z"
+            fill="url(#legitGradientNew)"
+            className="transition-all duration-1000"
+          />
+          <path
+            d="M 0 160 Q 50 140, 100 150 T 200 130 T 300 145 T 400 120"
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth="2"
+            filter="url(#glow)"
+            className="path-draw"
+          />
+
+          {/* Anomalous Volume Area (Fraud) */}
+          <path
+            d="M 0 190 Q 50 185, 100 180 T 200 160 T 300 170 T 400 140 L 400 200 L 0 200 Z"
+            fill="url(#fraudGradientNew)"
+            className="transition-all duration-1000 delay-300"
+          />
+          <path
+            d="M 0 190 Q 50 185, 100 180 T 200 160 T 300 170 T 400 140"
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth="2"
+            filter="url(#glow)"
+            className="path-draw stroke-red-500"
+            style={{ animationDelay: '300ms' }}
+          />
+
+          {/* Hover hit points mock */}
+          <circle cx="200" cy="130" r="4" fill="#3b82f6" className="animate-pulse" />
+          <circle cx="200" cy="160" r="4" fill="#ef4444" className="animate-pulse" />
+          
+          <line x1="200" y1="40" x2="200" y2="200" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="2 2" />
+        </svg>
+
+        {/* Floating Tooltip mock */}
+        <div className="absolute top-[20%] left-[55%] glass-panel border border-white/10 px-3 py-2 rounded pointer-events-none fade-in">
+           <p className="text-[10px] font-mono text-slate-400 mb-1">T-12:04:00</p>
+           <p className="text-xs font-bold text-blue-400">Vol: 1,420</p>
+           <p className="text-xs font-bold text-red-400">Anm: 12 (0.8%)</p>
         </div>
+      </div>
 
-        {/* Donut Chart */}
-        <div className="relative w-32 h-32 ml-6">
-          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-            {segments.map((segment, idx) => {
-              const startAngle = (segment.startAngle * Math.PI) / 180
-              const endAngle = (segment.endAngle * Math.PI) / 180
-              const largeArcFlag = segment.endAngle - segment.startAngle > 180 ? 1 : 0
-
-              const startX = 50 + 35 * Math.cos(startAngle)
-              const startY = 50 + 35 * Math.sin(startAngle)
-              const endX = 50 + 35 * Math.cos(endAngle)
-              const endY = 50 + 35 * Math.sin(endAngle)
-
-              return (
-                <path
-                  key={idx}
-                  d={`M 50 50 L ${startX} ${startY} A 35 35 0 ${largeArcFlag} 1 ${endX} ${endY} Z`}
-                  fill={segment.color}
-                  className="transition-all duration-300 hover:opacity-80"
-                />
-              )
-            })}
-            {/* Center white circle */}
-            <circle cx="50" cy="50" r="20" fill="hsl(var(--card))" />
-          </svg>
-
-          {/* Center Text */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-xs text-muted-foreground">Total</p>
-            <p className="text-xl font-bold text-foreground">100%</p>
-          </div>
+      <div className="flex items-center justify-center space-x-8 mt-6 border-t border-white/5 pt-4">
+        <div className="flex items-center space-x-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Expected Distribution</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Anomalous Spikes</span>
         </div>
       </div>
     </div>
