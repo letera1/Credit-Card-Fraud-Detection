@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --default-timeout=1000 --prefix=/install -r requirements.txt
 
 # ─────────────────────────────────────────────
 # Stage 2: Runtime — lean production image
