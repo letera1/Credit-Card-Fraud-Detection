@@ -1,64 +1,42 @@
 version: '3.8'
 
+# Production-only compose — API only, no frontend
+# Usage: docker-compose -f docker-compose.prod.yml up -d
+
 services:
-  # Backend API - Production
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fraud-detection-backend
+    image: tuta699/credit-card-fraud-detection:latest
+    container_name: fraud-detection-api
     ports:
       - "8000:8000"
     volumes:
       - ./models:/app/models:ro
-      - ./logs:/app/logs
       - ./config:/app/config:ro
+      - fraud-logs:/app/logs
     environment:
+      - APP_ENV=production
+      - LOG_LEVEL=WARNING
       - PYTHONUNBUFFERED=1
-      - LOG_LEVEL=INFO
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - fraud-detection
+      start_period: 45s
+      retries: 5
     deploy:
       resources:
         limits:
-          cpus: '2.0'
+          cpus: "2.0"
           memory: 2G
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
-
-  # Frontend - Production
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: fraud-detection-frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
-      - NODE_ENV=production
-    depends_on:
-      backend:
-        condition: service_healthy
-    restart: always
     networks:
       - fraud-detection
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.25'
-          memory: 256M
+
+volumes:
+  fraud-logs:
 
 networks:
   fraud-detection:

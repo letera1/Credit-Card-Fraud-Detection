@@ -1,37 +1,43 @@
 version: '3.8'
 
 services:
-  # Backend API
+  # ── Backend API ────────────────────────────────────────────
   backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fraud-detection-backend
+      target: runtime
+    image: tuta699/credit-card-fraud-detection:latest
+    container_name: fraud-detection-api
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     volumes:
-      - ./models:/app/models
-      - ./logs:/app/logs
-      - ./config:/app/config
+      - ./models:/app/models:ro
+      - ./config:/app/config:ro
+      - fraud-logs:/app/logs
     environment:
+      - APP_ENV=${APP_ENV:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
+      start_period: 45s
       retries: 3
     networks:
       - fraud-detection
 
-  # Frontend
+  # ── Frontend (Next.js) ─────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: tuta699/credit-card-fraud-detection-frontend:latest
     container_name: fraud-detection-frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:8000
     depends_on:
@@ -40,6 +46,9 @@ services:
     restart: unless-stopped
     networks:
       - fraud-detection
+
+volumes:
+  fraud-logs:
 
 networks:
   fraud-detection:

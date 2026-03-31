@@ -1,55 +1,68 @@
-# Python
+# ─── Python ────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-env/
-venv/
-ENV/
-.venv
-
-# Testing
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
 .pytest_cache/
+.mypy_cache/
 .coverage
 htmlcov/
-.tox/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
+# ─── Environments ───────────────────────────────────────────
+.env
+.env.*
+!.env.example
+venv/
+env/
+ENV/
 
-# Data
-data/
-*.csv
+# ─── Data (large CSV files) ─────────────────────────────────
+data/*.csv
+data/processed/
+data/raw/
 
-# Outputs
+# ─── Reports & experiments ──────────────────────────────────
+reports/
+experiments/
 outputs/
-logs/
-*.log
 
-# Git
-.git/
-.gitignore
+# ─── Frontend (built separately) ────────────────────────────
+frontend/
+!frontend/Dockerfile
 
-# Documentation
-docs/
+# ─── Tests (not needed in image) ────────────────────────────
+tests/
+
+# ─── Documentation ──────────────────────────────────────────
 *.md
 !README.md
 
-# Notebooks
-notebooks/
-*.ipynb
+# ─── Scripts ────────────────────────────────────────────────
+*.sh
+*.bat
+Makefile
 
-# Tests
-tests/
+# ─── IDE / OS ───────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
 
-# CI/CD
+# ─── Git ────────────────────────────────────────────────────
+.git/
 .github/
+.gitignore
 
-# Build
-dist/
-build/
-*.egg-info/
+# ─── Notebooks ──────────────────────────────────────────────
+*.ipynb
+.ipynb_checkpoints/
+
+# ─── Logs ───────────────────────────────────────────────────
+logs/
+*.log
