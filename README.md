@@ -471,7 +471,7 @@ For questions or support, please open an issue on GitHub.
 
 <div align="center">
 
-**Built with ❤️ using Python, FastAPI, Next.js, and Machine Learning**
+**Built using Python, FastAPI, Next.js, and Machine Learning**
 
 ⭐ Star this repo if you find it helpful!
 
