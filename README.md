@@ -2,17 +2,72 @@
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python)
+![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?style=for-the-badge&logo=fastapi)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=for-the-badge&logo=docker)
 
 **Enterprise-grade fraud detection powered by advanced machine learning**
 
-[Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Demo](#-demo)
+[Deploy with Docker](#-docker-deployment) • [Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Documentation](#-documentation)
 
 </div>
+
+---
+
+## 🚀 Docker Deployment (Recommended)
+
+### Quick Deploy
+
+**Windows:**
+```batch
+deploy.bat
+```
+
+**Linux/macOS:**
+```bash
+chmod +x deploy.sh && ./deploy.sh
+```
+
+### Manual Docker Build & Deploy
+
+```bash
+# Clone the repository
+git clone https://github.com/tuta699/credit-card-fraud-detection.git
+cd credit-card-fraud-detection
+
+# Build Docker images
+docker-compose -f docker/docker-compose.yml build
+
+# Start all services
+docker-compose -f docker/docker-compose.yml up -d
+
+# Verify deployment
+curl http://localhost:8000/health
+```
+
+### Access Services
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Frontend Dashboard** | http://localhost:3000 | Next.js UI |
+| **Backend API** | http://localhost:8000 | FastAPI REST API |
+| **API Documentation** | http://localhost:8000/docs | Swagger UI |
+
+### Using Makefile (Linux/macOS)
+
+```bash
+make build          # Build Docker images
+make up             # Start services
+make logs           # View logs
+make down           # Stop services
+make rebuild        # Rebuild and restart
+make help           # View all commands
+```
+
+📖 **Full Docker guide**: See [DOCKER_COMMANDS.md](DOCKER_COMMANDS.md)
 
 ---
 
@@ -88,8 +143,8 @@
 ### 1️⃣ Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/fraud-detection-ai.git
-cd fraud-detection-ai
+git clone https://github.com/tuta699/credit-card-fraud-detection.git
+cd credit-card-fraud-detection
 ```
 
 ### 2️⃣ Backend Setup
@@ -133,63 +188,96 @@ Open your browser and navigate to:
 
 ---
 
-## 📦 Project Structure
+## 📦 Project Structure (ML Expert Edition)
 
 ```
-fraud-detection-ai/
+credit-card-fraud-detection/
+├── 📁 apis/                     # API services layer (ML Expert)
+│   └── fraud_detection/
+│       ├── app.py              # FastAPI application
+│       ├── routes/             # API endpoints
+│       └── schemas/            # Pydantic models
+│
+├── 📁 core/                     # Core configuration (ML Expert)
+│   ├── config.py               # Configuration management
+│   └── logging.py              # Logging setup
+│
+├── 📁 features/                 # Feature engineering
+│   └── feature_engineer.py     # Advanced feature engineering
+│
+├── 📁 pipelines/                # ML pipelines
+│   ├── inference_pipeline.py   # Inference pipeline
+│   └── training_pipeline.py    # Training pipeline
+│
+├── 📁 monitoring/               # Production monitoring
+│   ├── logger.py
+│   ├── metrics_tracker.py
+│   └── model_monitor.py
+│
+├── 📁 explainability/           # Model explainability (SHAP)
+│   └── shap_explainer.py
+│
+├── 📁 models/                   # Model definitions
+│   └── ensemble.py             # Ensemble models
+│
+├── 📁 data/                     # Data layer
+│   ├── raw/                    # Raw data
+│   └── processed/              # Processed data
+│
+├── 📁 artifacts/                # Trained artifacts (gitignored)
+│   ├── models/                 # Saved models (.pkl, .joblib)
+│   └── preprocessors/          # Scalers, encoders
+│
+├── 📁 experiments/              # Experiment tracking
+│   ├── configs/                # Experiment configs
+│   └── logs/                   # Experiment logs
+│
+├── 📁 tests/                    # Test suite
+│   ├── unit/                   # Unit tests
+│   └── integration/            # Integration tests
+│
+├── 📁 scripts/                  # Utility scripts
+│   └── train_model.py          # Training script
+│
 ├── 📁 frontend/                 # Next.js 15 + TypeScript frontend
 │   ├── src/
 │   │   ├── app/                # Next.js app directory
 │   │   ├── components/         # React components
-│   │   │   ├── AnalyticsDashboard.tsx
-│   │   │   ├── FraudAlerts.tsx
-│   │   │   ├── ModelInfo.tsx
-│   │   │   ├── PredictionForm.tsx
-│   │   │   ├── ResultCard.tsx
-│   │   │   ├── Settings.tsx
-│   │   │   └── ...
-│   │   ├── contexts/           # React contexts (Theme)
-│   │   ├── lib/                # Utilities and API client
-│   │   └── types/              # TypeScript type definitions
+│   │   ├── contexts/           # React contexts
+│   │   ├── lib/                # Utilities
+│   │   └── types/              # TypeScript types
 │   └── package.json
 │
-├── 📁 src/                      # Python backend source
-│   ├── api/                    # FastAPI application
-│   │   └── app.py              # Main API endpoints
-│   ├── config/                 # Configuration management
-│   ├── features/               # Feature engineering
-│   │   └── feature_engineer.py
-│   ├── monitoring/             # Logging and metrics
-│   │   ├── logger.py
-│   │   ├── metrics_tracker.py
-│   │   └── model_monitor.py
-│   ├── pipeline/               # ML pipelines
-│   │   ├── inference_pipeline.py
-│   │   └── training_pipeline.py
-│   ├── explainability.py       # SHAP explanations
-│   └── ...
+├── 📁 docker/                   # Docker configurations
+│   ├── Dockerfile.api          # Backend Dockerfile
+│   ├── Dockerfile.frontend     # Frontend Dockerfile
+│   └── docker-compose.yml      # Docker Compose
 │
-├── 📁 models/                   # Trained ML models
-│   ├── best_fraud_model.pkl    # Primary XGBoost model
-│   ├── ensemble_models.pkl     # All ensemble models
-│   ├── feature_names.pkl       # Feature list
-│   └── amount_scaler.pkl       # Scaler for amounts
+├── 📁 configs/                  # Configuration files
+│   ├── default.yaml
+│   ├── development.yaml
+│   └── production.yaml
 │
-├── 📁 data/                     # Training data
-│   └── creditcard_advanced.csv
+├── 📁 reports/                  # Generated reports
+│   └── model_performance/
 │
-├── 📁 reports/                  # Model reports
-│   └── model_report.json
+├── .github/                     # GitHub Actions (CI/CD)
+├── artifacts/                   # Trained models
+├── logs/                        # Application logs
 │
-├── 📁 config/                   # Configuration files
-│   └── config.yaml
-│
-├── train_advanced_model.py     # Advanced model training script
+├── train_advanced_model.py     # Model training script
 ├── requirements.txt            # Python dependencies
-├── Dockerfile                  # Docker configuration
-├── docker-compose.fullstack.yml
+├── Makefile                    # Quick commands
+├── deploy.sh / deploy.bat      # Deployment scripts
 └── README.md
 ```
+
+### ML Expert Principles
+
+- **Separation of Concerns**: Clear boundaries between API, ML, and data layers
+- **Modular Design**: Each component is independently testable and deployable
+- **Production-Ready**: Monitoring, logging, and explainability built-in
+- **MLOps Best Practices**: Experiment tracking, model registry, CI/CD
 
 ---
 
@@ -325,22 +413,94 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ## 🐳 Docker Deployment
 
-### Build and Run with Docker Compose
+### Quick Deploy (Recommended)
 
+**Linux/macOS:**
 ```bash
-# Build and start all services
-docker-compose -f docker-compose.fullstack.yml up --build
+# Make the deploy script executable
+chmod +x deploy.sh
 
-# Run in detached mode
-docker-compose -f docker-compose.fullstack.yml up -d
-
-# Stop services
-docker-compose -f docker-compose.fullstack.yml down
+# Run the deployment script
+./deploy.sh
 ```
 
-Services will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
+**Windows:**
+```batch
+# Run the deployment script
+deploy.bat
+```
+
+### Manual Docker Compose Deployment
+
+```bash
+# Development mode
+docker-compose up --build
+
+# Or run in detached mode
+docker-compose up -d --build
+
+# Production mode (with resource limits)
+docker-compose -f docker-compose.prod.yml up -d --build
+
+# Stop services
+docker-compose down
+```
+
+### Using Makefile (Linux/macOS)
+
+```bash
+# Build images
+make build
+
+# Start all services
+make up
+
+# View logs
+make logs
+
+# Stop services
+make down
+
+# Rebuild and restart
+make rebuild
+
+# Production deployment
+make prod
+
+# View all commands
+make help
+```
+
+### Access the Application
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| Frontend | http://localhost:3000 | Next.js Dashboard |
+| Backend API | http://localhost:8000 | FastAPI REST API |
+| API Documentation | http://localhost:8000/docs | Swagger UI |
+| Health Check | http://localhost:8000/health | System Health |
+
+### Docker Management
+
+```bash
+# View running containers
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+
+# View backend logs only
+docker-compose logs -f backend
+
+# Access backend shell
+docker-compose exec backend /bin/bash
+
+# Train model in container
+docker-compose run --rm backend python train_advanced_model.py
+
+# Run tests
+docker-compose run --rm backend pytest
+```
 
 ---
 
