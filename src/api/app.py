@@ -8,6 +8,7 @@ from datetime import datetime
 import logging
 import asyncio
 import json
+import os
 import joblib
 import numpy as np
 import shap
@@ -26,10 +27,17 @@ app = FastAPI(
     version="3.0.0",
 )
 
+# CORS is configurable for production deployments.
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+    if origin.strip()
+]
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -408,6 +416,9 @@ async def feature_importance():
 @app.delete("/reset")
 async def reset_data():
     """Reset all data (for demo purposes)."""
+    if os.getenv("ENABLE_RESET_ENDPOINT", "false").lower() != "true":
+        raise HTTPException(status_code=403, detail="Reset endpoint disabled")
+
     global transaction_history, alert_queue, risk_scores
     transaction_history = []
     alert_queue = []

@@ -19,6 +19,8 @@ services:
       - APP_ENV=${APP_ENV:-production}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - PYTHONUNBUFFERED=1
+      - CORS_ALLOW_ORIGINS=${CORS_ALLOW_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      - ENABLE_RESET_ENDPOINT=${ENABLE_RESET_ENDPOINT:-false}
     security_opt:
       - no-new-privileges:true
     cap_drop:
