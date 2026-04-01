@@ -1,96 +1,233 @@
-# 🐳 Complete Docker Deployment Guide
+# Docker Deployment Guide
 
-Welcome to the **Credit Card Fraud Detection** Docker guide! This project uses a **multi-container microservices architecture** designed for production-grade Machine Learning deployments. 
+Production-grade container deployment for the Credit Card Fraud Detection platform.
+
+![Docker](https://img.shields.io/badge/Docker-Ready-0db7ed?logo=docker&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-05998b?logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-Frontend-black?logo=nextdotjs)
+![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
+![Security](https://img.shields.io/badge/Security-Non--Root%20%2B%20Hardened-success)
 
 ---
 
-## 🏗️ Architecture Overview
+## 1) Platform Snapshot
 
-The system is deployed using `docker-compose` and consists of two primary services communicating over a private bridge network.
+| Service | Role | Port | Container | Image |
+| --- | --- | ---: | --- | --- |
+| Frontend | Next.js dashboard | `3000` | `fraud-detection-frontend` | `tuta699/credit-card-fraud-detection-frontend:latest` |
+| Backend | FastAPI + inference API | `8000` | `fraud-detection-api` | `tuta699/credit-card-fraud-detection:latest` |
+
+---
+
+## 2) Architecture
 
 ```mermaid
 graph LR
-    User([🕵️ User / Analyst]) -->|HTTP :3000| Frontend
-    
-    subgraph Docker Bridge Network [fraud-detection]
-        Frontend[🎨 Next.js Frontend\ntuta699/...-frontend\n(Port: 3000)]
-        Backend[🧠 FastAPI ML Engine\ntuta699/...\n(Port: 8000)]
-        
-        Frontend -->|Internal API Calls\nhttp://backend:8000| Backend
-    end
-    
-    Backend --> Models[(📦 .pkl Models)]
+  USER[Browser]
+  FE[Next.js Frontend]
+  BE[FastAPI Fraud API]
+  MODELS[(models)]
+  LOGS[(logs)]
+
+  USER -->|http://localhost:3000| FE
+  FE -->|REST API| BE
+  BE --> MODELS
+  BE --> LOGS
+
+  subgraph Docker Network: fraud-detection
+    FE
+    BE
+  end
 ```
 
 ---
 
-## 🚀 Quick Start (Recommended)
+## 3) Quick Start (90 seconds)
 
-The absolute fastest way to get the entire system running is using our pre-built images from Docker Hub via Docker Compose.
+### Full stack
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/tuta699/credit-card-fraud-detection.git
-   cd credit-card-fraud-detection
-   ```
+```bash
+git clone https://github.com/tuta699/credit-card-fraud-detection.git
+cd credit-card-fraud-detection
+docker compose up -d --build
+```
 
-2. **Start the stack:**
-   ```bash
-   docker-compose up -d
-   ```
+Access points:
 
-3. **Access the Application:**
-   - 🎨 **Expert ML Dashboard (UI):** [http://localhost:3000](http://localhost:3000)
-   - 🧠 **FastAPI Swagger Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- Frontend: <http://localhost:3000>
+- API docs: <http://localhost:8000/docs>
+- Health: <http://localhost:8000/health>
+
+### Backend only (production compose)
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
 
 ---
 
-## 🛠️ Building the Images Locally
+## 4) Local Dev Workflow
 
-If you are a developer modifying the source code or training new models, use the `Makefile` commands to manage your local Docker environment.
-
-### 1. Build Both Services
 ```bash
 make docker-build
-```
-> *Note: Building the backend image (`tuta699/credit-card-fraud-detection`) can take 10-15 minutes on the first run as it compiles heavy data-science libraries (XGBoost, SciPy). We use Docker BuildKit caching to make subsequent builds instant!*
-
-### 2. Run the Stack
-```bash
 make docker-run
+make docker-stop
+make docker-clean
 ```
-*(This maps the local `./models` directory into the container, so any newly trained `.pkl` models are immediately available without rebuilding!)*
 
-### 3. Stop and Clean Up
-```bash
-make docker-stop    # Stops containers gracefully
-make docker-clean   # Removes the local images to free up space
-```
+Notes:
+
+- `docker-build` creates backend image tags (`latest` + git SHA).
+- `docker-run` mounts `models` and `config` as read-only.
+- First build may take longer due to scientific Python packages.
 
 ---
 
-## 🔐 Environment Variables
+## 5) Environment Setup
 
-The `docker-compose.yml` automatically reads from your `.env` file. To customize the deployment:
+Create env file:
 
-1. Copy the example file: `cp .env.example .env`
-2. Configure settings:
+```bash
+cp .env.example .env
+```
+
+Recommended production values:
 
 ```ini
-# --- API CONFIG ---
 API_PORT=8000
 APP_ENV=production
 LOG_LEVEL=INFO
 
-# --- FRONTEND CONFIG ---
+# Security
+CORS_ALLOW_ORIGINS=https://your-frontend-domain
+ENABLE_RESET_ENDPOINT=false
+
+# Frontend
 FRONTEND_PORT=3000
-# Note: Next.js uses this at build-time to point to the backend container
-NEXT_PUBLIC_API_URL=http://backend:8000 
+NEXT_PUBLIC_API_URL=http://backend:8000
 ```
 
 ---
 
-## 🌟 Pro-Tips for ML Developers
+## 6) Build and Push to Docker Hub
 
-* **Hot-Swapping Models:** The `docker-compose.yml` uses volume mounts `v ./models:/app/models`. If you train a better model locally (`python train_advanced_model.py`), simply drop the new `.pkl` files into the `./models` folder. The FastAPI container will pick them up immediately!
-* **Non-Root Security:** The backend image runs as a non-root `appuser (uid:1001)`. Ensure your host machine's `./logs` and `./models` folders have the correct read/write permissions.
+### Backend image
+
+```bash
+docker login
+docker build -t tuta699/credit-card-fraud-detection:latest .
+docker push tuta699/credit-card-fraud-detection:latest
+```
+
+### Frontend image
+
+```bash
+docker build -t tuta699/credit-card-fraud-detection-frontend:latest -f frontend/Dockerfile frontend
+docker push tuta699/credit-card-fraud-detection-frontend:latest
+```
+
+Verify published digest:
+
+```bash
+docker pull tuta699/credit-card-fraud-detection:latest
+docker inspect tuta699/credit-card-fraud-detection:latest --format='{{index .RepoDigests 0}}'
+```
+
+---
+
+## 7) CI/CD Pipeline (GitHub Actions)
+
+Workflow: `.github/workflows/ci-cd.yml`
+
+Pipeline stages:
+
+1. Python test and lint
+2. Frontend lockfile validation (`npm ci --ignore-scripts`)
+3. Docker Buildx image build (backend + frontend)
+4. Deploy notification on `main`
+
+Frontend reliability improvements in CI:
+
+- Explicit Node 20 setup in build job
+- GHA cache scopes split by image (`backend`, `frontend`)
+- Explicit webpack alias for `@` path resolution in Next config
+
+---
+
+## 8) Security Baseline
+
+Already enabled:
+
+- Non-root container users
+- `no-new-privileges`
+- Dropped Linux caps (`cap_drop: ALL`)
+- Read-only mounts for model and config paths
+- Runtime healthchecks
+
+Before internet exposure:
+
+- Set strict `CORS_ALLOW_ORIGINS` (never wildcard)
+- Keep `ENABLE_RESET_ENDPOINT=false` in production
+- Never commit `.env` or credentials
+- Rebuild images regularly to pick up base image patches
+
+---
+
+## 9) Troubleshooting
+
+### A) Docker daemon not running (Windows)
+
+Error:
+
+`open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified`
+
+Fix:
+
+1. Start Docker Desktop.
+2. Wait until engine is fully running.
+3. Validate:
+
+```bash
+docker info
+```
+
+### B) Frontend image fails in CI: `Module not found: Can't resolve '@/lib/api'`
+
+Checklist:
+
+1. Confirm alias in `frontend/tsconfig.json`:
+
+```json
+"baseUrl": ".",
+"paths": {
+  "@/*": ["./src/*"]
+}
+```
+
+1. Confirm explicit alias in `frontend/next.config.js`.
+2. Re-run workflow after pushing both files.
+
+### C) `npm ci` fails in CI
+
+Cause: lockfile mismatch.
+
+Fix:
+
+```bash
+cd frontend
+npm install
+git add package-lock.json
+```
+
+---
+
+## 10) Release Tips for ML Teams
+
+- Keep model artifacts versioned and immutable per release.
+- Tag images with both `latest` and semantic tags (example: `v1.3.0`).
+- Keep rollback notes with the image digest for each deployment.
+- Validate API health and one smoke inference after every rollout.
+
+---
+
+This Docker stack is now optimized for local development, CI reliability, and secure production deployment.
