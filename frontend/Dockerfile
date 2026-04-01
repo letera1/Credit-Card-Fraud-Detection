@@ -1,8 +1,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-ENV NODE_ENV=production \
-	NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Install dependencies from lockfile for reproducible builds.
 COPY package.json package-lock.json ./
