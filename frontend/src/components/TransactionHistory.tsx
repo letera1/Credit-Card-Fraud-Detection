@@ -15,6 +15,8 @@ interface Transaction {
 export default function TransactionHistory() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     loadTransactions()
@@ -24,7 +26,7 @@ export default function TransactionHistory() {
 
   const loadTransactions = async () => {
     try {
-      const data = await getTransactions(10)
+      const data = await getTransactions(50)
       setTransactions(data.transactions || [])
     } catch (error) {
       console.error('Failed to load transactions:', error)
@@ -33,126 +35,201 @@ export default function TransactionHistory() {
     }
   }
 
+  const getRiskBadge = (level: string) => {
+    const badges = {
+      'LOW': 'bg-green-500/10 text-green-400 border-green-500/30',
+      'MEDIUM': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+      'HIGH': 'bg-orange-500/10 text-orange-400 border-orange-500/30',
+      'CRITICAL': 'bg-red-500/10 text-red-400 border-red-500/30'
+    }
+    return badges[level as keyof typeof badges] || badges.LOW
+  }
+
+  const getRiskIcon = (level: string) => {
+    if (level === 'CRITICAL') return '🔴'
+    if (level === 'HIGH') return '🟠'
+    if (level === 'MEDIUM') return '🟡'
+    return '🟢'
+  }
+
+  const filteredTransactions = transactions.filter(tx => {
+    const matchesFilter = filter === 'all' || tx.risk_level === filter
+    const matchesSearch = tx.transaction_id.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesFilter && matchesSearch
+  })
+
+  const stats = {
+    total: transactions.length,
+    low: transactions.filter(t => t.risk_level === 'LOW').length,
+    medium: transactions.filter(t => t.risk_level === 'MEDIUM').length,
+    high: transactions.filter(t => t.risk_level === 'HIGH').length,
+    critical: transactions.filter(t => t.risk_level === 'CRITICAL').length
+  }
+
   return (
-    <div className="bg-card rounded-xl border border-border p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-foreground">Recent Transactions</h3>
-        <select className="px-3 py-1.5 bg-secondary border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50">
-          <option>Last 10</option>
-          <option>Last 50</option>
-          <option>Last 100</option>
-        </select>
+    <div className="space-y-6">
+      {/* Header with Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div 
+          onClick={() => setFilter('all')}
+          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'all' ? 'border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.3)]' : 'border-white/5'}`}
+        >
+          <p className="text-xs font-mono text-slate-400 uppercase tracking-widest mb-2">Total</p>
+          <p className="text-3xl font-bold text-white">{stats.total}</p>
+        </div>
+        
+        <div 
+          onClick={() => setFilter('LOW')}
+          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'LOW' ? 'border-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.3)]' : 'border-white/5'}`}
+        >
+          <p className="text-xs font-mono text-green-400 uppercase tracking-widest mb-2 flex items-center">
+            <span className="mr-2">🟢</span> Low Risk
+          </p>
+          <p className="text-3xl font-bold text-green-400">{stats.low}</p>
+        </div>
+
+        <div 
+          onClick={() => setFilter('MEDIUM')}
+          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'MEDIUM' ? 'border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.3)]' : 'border-white/5'}`}
+        >
+          <p className="text-xs font-mono text-yellow-400 uppercase tracking-widest mb-2 flex items-center">
+            <span className="mr-2">🟡</span> Medium
+          </p>
+          <p className="text-3xl font-bold text-yellow-400">{stats.medium}</p>
+        </div>
+
+        <div 
+          onClick={() => setFilter('HIGH')}
+          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'HIGH' ? 'border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.3)]' : 'border-white/5'}`}
+        >
+          <p className="text-xs font-mono text-orange-400 uppercase tracking-widest mb-2 flex items-center">
+            <span className="mr-2">🟠</span> High Risk
+          </p>
+          <p className="text-3xl font-bold text-orange-400">{stats.high}</p>
+        </div>
+
+        <div 
+          onClick={() => setFilter('CRITICAL')}
+          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'CRITICAL' ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'border-white/5'}`}
+        >
+          <p className="text-xs font-mono text-red-400 uppercase tracking-widest mb-2 flex items-center">
+            <span className="mr-2">🔴</span> Critical
+          </p>
+          <p className="text-3xl font-bold text-red-400">{stats.critical}</p>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      ) : transactions.length === 0 ? (
-        <div className="text-center py-12">
-          <svg className="w-16 h-16 mx-auto mb-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      {/* Search and Filter Bar */}
+      <div className="glass-panel rounded-xl p-4 flex items-center space-x-4">
+        <div className="flex-1 relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <p className="text-muted-foreground">No transactions yet</p>
-          <p className="text-sm text-muted-foreground mt-2">Start analyzing transactions to see results here</p>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by transaction ID..."
+            className="w-full pl-10 pr-4 py-2 bg-black/40 border border-white/10 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500/50"
+          />
         </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span>Date & Time</span>
-                  </div>
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
-                    <span>Transaction ID</span>
-                  </div>
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>Status</span>
-                  </div>
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <span>Risk Score</span>
-                  </div>
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                    <span>Probability</span>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((tx, idx) => (
-                <tr key={idx} className="border-b border-border hover:bg-secondary/50 transition-colors">
-                  <td className="py-3 px-4 text-sm text-foreground">
-                    {new Date(tx.timestamp).toLocaleString('en-US', { 
-                      month: '2-digit', 
-                      day: '2-digit', 
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </td>
-                  <td className="py-3 px-4 text-sm font-mono text-muted-foreground">
-                    {tx.transaction_id.slice(-12)}
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className={`inline-flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium ${
-                      tx.is_fraud
-                        ? 'bg-red-500/10 text-red-500'
-                        : 'bg-green-500/10 text-green-500'
-                    }`}>
-                      <span>{tx.is_fraud ? '🚨' : '✅'}</span>
-                      <span>{tx.is_fraud ? 'FRAUD' : 'LEGITIMATE'}</span>
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-semibold text-foreground">{tx.risk_score}</span>
-                      <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                        tx.risk_level === 'CRITICAL'
-                          ? 'bg-red-500/10 text-red-500'
-                          : tx.risk_level === 'HIGH'
-                          ? 'bg-orange-500/10 text-orange-500'
-                          : tx.risk_level === 'MEDIUM'
-                          ? 'bg-yellow-500/10 text-yellow-500'
-                          : 'bg-green-500/10 text-green-500'
-                      }`}>
-                        {tx.risk_level}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-muted-foreground">
-                    {(tx.fraud_probability * 100).toFixed(2)}%
-                  </td>
+        <button className="px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 rounded-lg text-sm text-purple-400 transition-colors">
+          Export CSV
+        </button>
+      </div>
+
+      {/* Transactions Table */}
+      <div className="glass-panel rounded-xl border border-white/5 overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : filteredTransactions.length === 0 ? (
+          <div className="text-center py-12">
+            <svg className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="text-muted-foreground">No transactions found</p>
+            <p className="text-sm text-muted-foreground mt-2">Try adjusting your filters</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-black/40 border-b border-white/5">
+                <tr>
+                  <th className="text-left py-4 px-6 text-xs font-mono text-slate-400 uppercase tracking-widest">
+                    Time
+                  </th>
+                  <th className="text-left py-4 px-6 text-xs font-mono text-slate-400 uppercase tracking-widest">
+                    Transaction ID
+                  </th>
+                  <th className="text-left py-4 px-6 text-xs font-mono text-slate-400 uppercase tracking-widest">
+                    Risk Level
+                  </th>
+                  <th className="text-left py-4 px-6 text-xs font-mono text-slate-400 uppercase tracking-widest">
+                    Risk Score
+                  </th>
+                  <th className="text-left py-4 px-6 text-xs font-mono text-slate-400 uppercase tracking-widest">
+                    Probability
+                  </th>
+                  <th className="text-left py-4 px-6 text-xs font-mono text-slate-400 uppercase tracking-widest">
+                    Status
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {filteredTransactions.map((tx, idx) => (
+                  <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+                    <td className="py-4 px-6 text-sm text-slate-300 font-mono">
+                      {new Date(tx.timestamp).toLocaleTimeString('en-US', { 
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })}
+                    </td>
+                    <td className="py-4 px-6 text-sm font-mono text-white group-hover:text-purple-400 transition-colors">
+                      {tx.transaction_id.slice(-16)}
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-mono border ${getRiskBadge(tx.risk_level)}`}>
+                        <span>{getRiskIcon(tx.risk_level)}</span>
+                        <span>{tx.risk_level}</span>
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg font-bold text-white">{tx.risk_score}</span>
+                        <div className="w-20 h-2 bg-black/40 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all ${
+                              tx.risk_score >= 80 ? 'bg-red-500' :
+                              tx.risk_score >= 60 ? 'bg-orange-500' :
+                              tx.risk_score >= 30 ? 'bg-yellow-500' : 'bg-green-500'
+                            }`}
+                            style={{ width: `${tx.risk_score}%` }}
+                          />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-sm text-slate-300 font-mono">
+                      {(tx.fraud_probability * 100).toFixed(2)}%
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex px-3 py-1 rounded-lg text-xs font-medium ${
+                        tx.is_fraud
+                          ? 'bg-red-500/10 text-red-400 border border-red-500/30'
+                          : 'bg-green-500/10 text-green-400 border border-green-500/30'
+                      }`}>
+                        {tx.is_fraud ? 'FRAUD' : 'LEGITIMATE'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
