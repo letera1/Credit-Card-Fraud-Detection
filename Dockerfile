@@ -17,17 +17,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --default-timeout=1000 --prefix=/install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --default-timeout=1000 --prefix=/install -r requirements.txt
 
 # ─────────────────────────────────────────────
 # Stage 2: Runtime — lean production image
 # ─────────────────────────────────────────────
 FROM python:3.11-slim AS runtime
 
-LABEL maintainer="FraudGuard AI" \
+LABEL maintainer="tuta699" \
       org.opencontainers.image.title="Credit Card Fraud Detection API" \
       org.opencontainers.image.description="Advanced ML fraud detection with Ensemble models, SHAP explainability, and real-time monitoring" \
-      org.opencontainers.image.version="3.0.0"
+      org.opencontainers.image.version="3.0.0" \
+      org.opencontainers.image.source="https://github.com/tuta699/credit-card-fraud-detection"
 
 WORKDIR /app
 
@@ -52,14 +54,13 @@ ENV PYTHONPATH=/app \
     API_HOST=0.0.0.0 \
     API_PORT=8000
 
-# Copy application code
+# Copy only what the API needs at runtime
 COPY --chown=appuser:appgroup src/ ./src/
 COPY --chown=appuser:appgroup config/ ./config/
 COPY --chown=appuser:appgroup models/ ./models/
-COPY --chown=appuser:appgroup data/ ./data/
 
-# Create writable dirs
-RUN mkdir -p logs reports && \
+# Create writable dirs, then lock down ownership
+RUN mkdir -p logs outputs/plots outputs/results && \
     chown -R appuser:appgroup /app
 
 USER appuser

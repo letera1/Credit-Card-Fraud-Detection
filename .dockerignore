@@ -1,54 +1,68 @@
-# Python
+# ─── Python ────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
-env/
-venv/
-ENV/
-.venv
-
-# Testing
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
 .pytest_cache/
+.mypy_cache/
 .coverage
 htmlcov/
-*.cover
 
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# ─── Environments ───────────────────────────────────────────
+.env
+.env.*
+!.env.example
+venv/
+env/
+ENV/
 
-# OS
-.DS_Store
-Thumbs.db
+# ─── Data (large CSV files) ─────────────────────────────────
+data/*.csv
+data/processed/
+data/raw/
 
-# Git
-.git/
-.gitignore
-.gitattributes
+# ─── Reports & experiments ──────────────────────────────────
+reports/
+experiments/
+outputs/
 
-# Documentation
+# ─── Frontend (built separately) ────────────────────────────
+frontend/
+!frontend/Dockerfile
+
+# ─── Tests (not needed in image) ────────────────────────────
+tests/
+
+# ─── Documentation ──────────────────────────────────────────
 *.md
 !README.md
-docs/
 
-# Frontend
-frontend/
-node_modules/
+# ─── Scripts ────────────────────────────────────────────────
+*.sh
+*.bat
+Makefile
 
-# Logs
-logs/*.log
+# ─── IDE / OS ───────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
 
-# Temporary files
-*.tmp
-*.temp
-.cache/
+# ─── Git ────────────────────────────────────────────────────
+.git/
+.github/
+.gitignore
 
-# Docker
-Dockerfile
-docker-compose*.yml
-.dockerignore
+# ─── Notebooks ──────────────────────────────────────────────
+*.ipynb
+.ipynb_checkpoints/
+
+# ─── Logs ───────────────────────────────────────────────────
+logs/
+*.log
