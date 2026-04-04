@@ -14,6 +14,7 @@ import ModelInfo from '@/components/ModelInfo'
 import Settings from '@/components/Settings'
 import BatchProcessing from '@/components/BatchProcessing'
 import ModelPerformance from '@/components/ModelPerformance'
+import AdvancedAnalytics from '@/components/AdvancedAnalytics'
 import { PredictionResult } from '@/types'
 import { getAnalytics } from '@/lib/api'
 
@@ -192,7 +193,7 @@ export default function Home() {
       case 'batch': return <div className="animate-in fade-in"><BatchProcessing /></div>
       case 'performance': return <div className="animate-in fade-in"><ModelPerformance /></div>
       case 'history': return <div className="animate-in fade-in"><TransactionHistory /></div>
-      case 'analytics': return <div className="animate-in fade-in"><AnalyticsDashboard /></div>
+      case 'analytics': return <div className="animate-in fade-in"><AdvancedAnalytics /></div>
       case 'alerts': return <div className="animate-in fade-in"><FraudAlerts /></div>
       case 'model-info': return <div className="animate-in fade-in"><ModelInfo /></div>
       case 'settings': return <div className="animate-in fade-in"><Settings /></div>
