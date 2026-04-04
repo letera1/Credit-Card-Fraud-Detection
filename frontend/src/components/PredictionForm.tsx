@@ -15,22 +15,55 @@ export default function PredictionForm({ onResult, loading, setLoading }: Predic
   const [rawInput, setRawInput] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const handleGenerateData = () => {
-    // Generate malicious-looking data to force a fraud detection for demo purposes
-    const mockData = {
-      Time: Math.floor(Math.random() * 100000),
-      V1: -3.043541, V2: -3.157307, V3: 1.088463, V4: 2.288644,
+  // Test data templates
+  const testDataTemplates = {
+    legitimate: {
+      Time: 45000, V1: 0.123, V2: -0.456, V3: 0.234, V4: 0.112,
+      V5: -0.089, V6: 0.345, V7: -0.123, V8: 0.067, V9: -0.145,
+      V10: 0.234, V11: -0.089, V12: 0.156, V13: -0.234, V14: 0.089,
+      V15: -0.123, V16: 0.234, V17: -0.145, V18: 0.089, V19: -0.234,
+      V20: 0.123, V21: -0.089, V22: 0.156, V23: -0.123, V24: 0.089,
+      V25: -0.145, V26: 0.234, V27: -0.089, V28: 0.123, Scaled_Amount: 0.45
+    },
+    moderate: {
+      Time: 82000, V1: -1.234, V2: 1.567, V3: -0.987, V4: 1.456,
+      V5: -1.123, V6: 0.876, V7: -1.345, V8: 0.654, V9: -0.987,
+      V10: 1.234, V11: -0.876, V12: 1.456, V13: -1.234, V14: 0.987,
+      V15: -1.123, V16: 1.345, V17: -0.876, V18: 0.765, V19: -1.234,
+      V20: 0.987, V21: -0.876, V22: 1.123, V23: -0.987, V24: 0.876,
+      V25: -1.234, V26: 1.123, V27: -0.876, V28: 0.654, Scaled_Amount: 1.85
+    },
+    fraud: {
+      Time: 150000, V1: -3.043541, V2: -3.157307, V3: 1.088463, V4: 2.288644,
       V5: 1.359805, V6: -1.064823, V7: 0.325574, V8: -0.067794,
       V9: -0.270953, V10: -0.838587, V11: -0.414575, V12: -0.503141,
       V13: 0.676502, V14: -1.692029, V15: 2.000635, V16: -0.366753,
       V17: 0.613322, V18: 1.259972, V19: 2.083313, V20: -0.252773,
       V21: 0.661696, V22: 0.435477, V23: 1.375966, V24: -0.293803,
       V25: 0.279798, V26: -0.145362, V27: -0.252773, V28: 0.035764,
-      Scaled_Amount: 529.00
+      Scaled_Amount: 3.75
+    },
+    critical: {
+      Time: 165432, V1: -4.521234, V2: -4.876543, V3: 2.345678, V4: 3.456789,
+      V5: 2.567890, V6: -2.345678, V7: 1.234567, V8: -1.123456,
+      V9: -1.876543, V10: -2.345678, V11: -1.987654, V12: -2.123456,
+      V13: 1.876543, V14: -3.456789, V15: 3.234567, V16: -1.876543,
+      V17: 2.123456, V18: 2.876543, V19: 3.456789, V20: -1.234567,
+      V21: 1.987654, V22: 1.876543, V23: 2.765432, V24: -1.456789,
+      V25: 1.345678, V26: -1.234567, V27: -1.876543, V28: 0.987654,
+      Scaled_Amount: 5.25
     }
-    setRawInput(JSON.stringify(mockData, null, 2))
+  }
+
+  const loadTestData = (type: 'legitimate' | 'moderate' | 'fraud' | 'critical') => {
+    const data = testDataTemplates[type]
+    setRawInput(JSON.stringify(data, null, 2))
     setUseRawInput(true)
     setError(null)
+  }
+
+  const handleGenerateData = () => {
+    loadTestData('fraud')
   }
 
   const handlePredict = async (e: React.FormEvent) => {
