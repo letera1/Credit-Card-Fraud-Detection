@@ -141,13 +141,49 @@ export default function PredictionForm({ onResult, loading, setLoading }: Predic
       <form onSubmit={handlePredict} className="flex-1 flex flex-col">
         {useRawInput ? (
           <div className="flex-1 flex flex-col min-h-[300px]">
-            <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2 flex justify-between">
+            <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-3">
               JSON Payload Window
-              <button type="button" onClick={handleGenerateData} className="text-purple-400 hover:text-purple-300 transition-colors flex items-center">
-                 <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                 Inject Fraud Signature
-              </button>
             </label>
+            
+            {/* Quick Load Test Data Buttons */}
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <button 
+                type="button" 
+                onClick={() => loadTestData('legitimate')}
+                className="px-3 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 hover:border-green-500/50 rounded-lg text-xs font-mono text-green-400 transition-all flex items-center justify-center space-x-2"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span>Legitimate</span>
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={() => loadTestData('moderate')}
+                className="px-3 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 hover:border-yellow-500/50 rounded-lg text-xs font-mono text-yellow-400 transition-all flex items-center justify-center space-x-2"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <span>Moderate Risk</span>
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={() => loadTestData('fraud')}
+                className="px-3 py-2 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 hover:border-orange-500/50 rounded-lg text-xs font-mono text-orange-400 transition-all flex items-center justify-center space-x-2"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span>Fraud</span>
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={() => loadTestData('critical')}
+                className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-lg text-xs font-mono text-red-400 transition-all flex items-center justify-center space-x-2"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <span>Critical Fraud</span>
+              </button>
+            </div>
+
             <textarea
               value={rawInput}
               onChange={(e) => setRawInput(e.target.value)}
