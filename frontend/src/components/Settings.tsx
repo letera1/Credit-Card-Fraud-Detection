@@ -328,52 +328,131 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* API Settings */}
-      <div className="bg-card rounded-xl border border-border p-6">
-        <h3 className="text-lg font-bold text-foreground mb-4">API Configuration</h3>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">
-              API Endpoint
-            </label>
-            <input
-              type="text"
-              value={settings.apiEndpoint}
-              onChange={(e) => updateSetting('apiEndpoint', e.target.value)}
-              className="w-full px-4 py-2 bg-secondary border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">
-              API Status
-            </label>
-            <div className="flex items-center space-x-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-green-500">Connected</span>
+      {/* Display Settings */}
+      <div className="glass-panel rounded-2xl border border-white/5 p-6 relative overflow-hidden group hover:border-cyan-500/30 transition-all">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-3xl group-hover:bg-cyan-500/10 transition-all"></div>
+        <div className="relative z-10">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
+              <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
             </div>
+            <h3 className="text-lg font-bold text-white">Display & Refresh</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-5 rounded-xl bg-black/40 border border-white/5 hover:border-cyan-500/30 transition-all group/item">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover/item:scale-110 transition-transform">
+                  <svg className="w-6 h-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white">Auto-Refresh Dashboard</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Automatically update analytics and transactions
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => updateSetting('autoRefresh', !settings.autoRefresh)}
+                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all ${
+                  settings.autoRefresh ? 'bg-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.5)]' : 'bg-slate-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${
+                    settings.autoRefresh ? 'translate-x-8' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {settings.autoRefresh && (
+              <div className="p-5 rounded-xl bg-black/40 border border-white/5 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center justify-between mb-4">
+                  <label className="text-sm font-medium text-white">
+                    Refresh Interval
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl font-bold text-cyan-400">{settings.refreshInterval}</span>
+                    <span className="text-sm text-slate-400">seconds</span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="30"
+                  step="1"
+                  value={settings.refreshInterval}
+                  onChange={(e) => updateSetting('refreshInterval', parseInt(e.target.value))}
+                  className="w-full h-2 bg-black/40 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-cyan-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(6,182,212,0.5)]"
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-2">
+                  <span>1s (Fast)</span>
+                  <span>30s (Slow)</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-between">
-        <button 
-          onClick={resetSettings}
-          className="px-6 py-2 rounded-lg bg-secondary hover:bg-accent text-foreground text-sm font-medium transition-colors"
-        >
-          Reset to Defaults
-        </button>
-        <button 
-          onClick={saveSettings}
-          className="px-6 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-medium transition-colors flex items-center space-x-2"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Save Changes</span>
-        </button>
+      {/* API Settings */}
+      <div className="glass-panel rounded-2xl border border-white/5 p-6 relative overflow-hidden group hover:border-green-500/30 transition-all">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl group-hover:bg-green-500/10 transition-all"></div>
+        <div className="relative z-10">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-white">API Configuration</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="p-5 rounded-xl bg-black/40 border border-white/5">
+              <label className="text-sm font-medium text-white mb-3 block">
+                Backend Endpoint
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={settings.apiEndpoint}
+                  onChange={(e) => updateSetting('apiEndpoint', e.target.value)}
+                  className="w-full px-4 py-3 bg-black/60 border border-white/10 rounded-lg text-sm text-white font-mono focus:outline-none focus:border-green-500/50 focus:shadow-[0_0_15px_rgba(34,197,94,0.2)] transition-all"
+                  placeholder="http://localhost:8000"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-xl bg-green-500/10 border border-green-500/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]"></div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-green-400">API Status</p>
+                    <p className="text-xs text-green-400/70">Connection established</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs font-mono text-green-400">14ms</p>
+                  <p className="text-xs text-green-400/70">latency</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
