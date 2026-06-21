@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
+import { getAnalytics } from '@/lib/api'
+
 interface Analytics {
   total_transactions: number
   fraud_detected: number
@@ -48,16 +50,8 @@ export default function AnalyticsDashboard() {
 
   const fetchAnalytics = async () => {
     try {
-      // Mocked data for UI demonstration assuming API might be unreachable in dev
-      const mockData = {
-        total_transactions: 14592,
-        fraud_detected: 248,
-        fraud_rate: 1.7,
-        avg_risk_score: 12.4,
-        high_risk_transactions: 312,
-        alerts_active: 5
-      }
-      setAnalytics(mockData)
+      const data = await getAnalytics()
+      setAnalytics(data)
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch analytics:', error)
