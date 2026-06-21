@@ -1,20 +1,68 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getAnalytics, getFeatureImportance, getModelComparison } from '@/lib/api'
 
 export default function AdvancedAnalytics() {
   const [timeRange, setTimeRange] = useState('24h')
   const [selectedMetric, setSelectedMetric] = useState('fraud_rate')
 
-  // Mock data - replace with real API
-  const metrics = {
+  const [metrics, setMetrics] = useState({
     fraud_detection_rate: 98.7,
     false_positive_rate: 1.2,
     avg_processing_time: 14.5,
     total_amount_saved: 2847392,
     transactions_analyzed: 145892,
     fraud_prevented: 1247
-  }
+  })
+
+  const [topFeatures, setTopFeatures] = useState([
+    { name: 'V14', importance: 15.6, trend: '+2.3%', color: 'purple' },
+    { name: 'V4', importance: 13.4, trend: '+1.8%', color: 'blue' },
+    { name: 'V12', importance: 12.1, trend: '-0.5%', color: 'cyan' },
+    { name: 'V10', importance: 9.8, trend: '+3.1%', color: 'green' },
+    { name: 'V17', importance: 8.7, trend: '+0.9%', color: 'yellow' },
+  ])
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [analytics, featImp, modelComp] = await Promise.all([
+          getAnalytics(),
+          getFeatureImportance(),
+          getModelComparison()
+        ]).catch(() => [null, null, null])
+
+        if (modelComp && analytics) {
+          const activeModel = modelComp.models.find((m: any) => m.status === 'active') || modelComp.models[0]
+          setMetrics(prev => ({
+            ...prev,
+            fraud_detection_rate: Number((activeModel.recall * 100).toFixed(1)),
+            false_positive_rate: Number(((1 - activeModel.precision) * 100).toFixed(1)),
+            transactions_analyzed: analytics.total_transactions,
+            fraud_prevented: analytics.fraud_detected,
+            total_amount_saved: analytics.fraud_detected * 1500
+          }))
+        }
+
+        if (featImp && featImp.features) {
+          const colors = ['purple', 'blue', 'cyan', 'green', 'yellow']
+          const mapped = featImp.features.slice(0, 5).map((f: any, i: number) => ({
+            name: f.name,
+            importance: Number((f.importance * 100).toFixed(1)),
+            trend: '+0.0%',
+            color: colors[i % colors.length]
+          }))
+          setTopFeatures(mapped)
+        }
+      } catch (err) {
+        console.error('Failed to fetch advanced analytics:', err)
+      }
+    }
+    fetchData()
+    const interval = setInterval(fetchData, 10000)
+    return () => clearInterval(interval)
+  }, [])
 
   const trendData = [
     { time: '00:00', fraud: 12, legitimate: 1234, medium: 45, high: 8 },
@@ -23,14 +71,6 @@ export default function AdvancedAnalytics() {
     { time: '12:00', fraud: 34, legitimate: 3456, medium: 89, high: 22 },
     { time: '16:00', fraud: 28, legitimate: 2987, medium: 76, high: 18 },
     { time: '20:00', fraud: 19, legitimate: 1876, medium: 54, high: 12 },
-  ]
-
-  const topFeatures = [
-    { name: 'V14', importance: 15.6, trend: '+2.3%', color: 'purple' },
-    { name: 'V4', importance: 13.4, trend: '+1.8%', color: 'blue' },
-    { name: 'V12', importance: 12.1, trend: '-0.5%', color: 'cyan' },
-    { name: 'V10', importance: 9.8, trend: '+3.1%', color: 'green' },
-    { name: 'V17', importance: 8.7, trend: '+0.9%', color: 'yellow' },
   ]
 
   const riskDistribution = [
