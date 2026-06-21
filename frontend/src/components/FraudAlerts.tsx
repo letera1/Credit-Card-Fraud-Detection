@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { getAlerts, resolveAlert as resolveAlertApi } from '@/lib/api'
 
 interface Alert {
   alert_id: string
@@ -29,8 +29,8 @@ export default function FraudAlerts() {
 
   const fetchAlerts = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/alerts')
-      setAlerts(response.data.alerts || [])
+      const data = await getAlerts()
+      setAlerts(data.alerts || [])
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch alerts:', error)
@@ -40,7 +40,7 @@ export default function FraudAlerts() {
 
   const resolveAlert = async (alertId: string) => {
     try {
-      await axios.post(`http://localhost:8000/alerts/${alertId}/resolve`)
+      await resolveAlertApi(alertId)
       fetchAlerts()
     } catch (error) {
       console.error('Failed to resolve alert:', error)
