@@ -1,26 +1,31 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getModelInfo, getFeatureImportance } from '@/lib/api'
+import { getModelInfo, getFeatureImportance, getDataDrift } from '@/lib/api'
 
 export default function ModelInfo() {
   const [modelInfo, setModelInfo] = useState<any>(null)
   const [featureImportance, setFeatureImportance] = useState<any>(null)
+  const [driftData, setDriftData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
     fetchModelInfo()
+    const interval = setInterval(fetchModelInfo, 10000)
+    return () => clearInterval(interval)
   }, [])
 
   const fetchModelInfo = async () => {
     try {
-      const [infoData, featuresData] = await Promise.all([
+      const [infoData, featuresData, driftRes] = await Promise.all([
         getModelInfo(),
-        getFeatureImportance()
+        getFeatureImportance(),
+        getDataDrift().catch(() => null)
       ])
       setModelInfo(infoData)
       setFeatureImportance(featuresData)
+      if (driftRes) setDriftData(driftRes)
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch model info:', error)
@@ -40,44 +45,55 @@ export default function ModelInfo() {
     { id: 'overview', label: 'Overview', icon: '📊' },
     { id: 'models', label: 'Models', icon: '🤖' },
     { id: 'features', label: 'Features', icon: '🔬' },
-    { id: 'dataset', label: 'Dataset', icon: '📁' }
+    { id: 'dataset', label: 'Dataset', icon: '📁' },
+    { id: 'drift', label: 'Data Drift', icon: '🌊' }
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-white mb-2">Model Artifacts</h2>
-          <p className="text-sm text-slate-400">Comprehensive ML model information and performance metrics</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-black/40 border border-white/5 backdrop-blur-md relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+        <div className="relative z-10">
+          <h2 className="text-3xl font-bold text-white mb-2 tracking-tight flex items-center space-x-3">
+            <svg className="w-8 h-8 text-cyan-400 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+            <span>Model Artifacts</span>
+          </h2>
+          <p className="text-sm text-slate-400 font-mono">Comprehensive ML model information and performance metrics</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-              <span className="text-xs font-mono text-purple-400">v{modelInfo?.version || '3.0.0'}</span>
-            </div>
+        <div className="flex items-center space-x-3 relative z-10">
+          <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-xl shadow-[0_0_15px_rgba(168,85,247,0.15)] flex items-center space-x-3 backdrop-blur-md">
+            <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse shadow-[0_0_8px_currentColor]"></div>
+            <span className="text-sm font-mono font-bold text-purple-300 tracking-widest">v{modelInfo?.version || '3.0.0'}</span>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="glass-panel rounded-xl border border-white/5 p-2">
-        <div className="flex space-x-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                activeTab === tab.id
-                  ? 'bg-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+      {/* Segmented Control Tabs */}
+      <div className="glass-panel rounded-2xl border border-white/10 p-1.5 relative overflow-x-auto hide-scrollbar">
+        <div className="flex min-w-max space-x-1">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative flex-1 px-6 py-3 rounded-xl text-sm font-bold font-mono tracking-wider transition-all duration-300 flex items-center justify-center space-x-2 z-10 overflow-hidden ${
+                  isActive
+                    ? 'text-white'
+                    : 'text-slate-500 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/80 to-cyan-600/80 shadow-[0_0_20px_rgba(168,85,247,0.4)] -z-10 rounded-xl"></div>
+                )}
+                <span className={`text-lg ${isActive ? 'drop-shadow-[0_0_8px_currentColor]' : 'opacity-70'}`}>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
