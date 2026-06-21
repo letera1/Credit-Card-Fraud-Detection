@@ -16,6 +16,7 @@ import shap
 from src.pipeline.inference_pipeline import InferencePipeline
 from src.monitoring import setup_logger
 from src.features.feature_engineer import FeatureEngineer
+from src.api.advanced_endpoints import router as advanced_router
 
 # Setup logging
 logger = setup_logger("api")
@@ -42,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register advanced endpoints
+app.include_router(advanced_router)
 
 # Initialize inference pipeline
 inference_pipeline = None
