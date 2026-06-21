@@ -102,58 +102,55 @@ export default function ModelInfo() {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-panel rounded-2xl border border-purple-500/20 p-6 relative overflow-hidden group hover:border-purple-500/40 transition-all">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+            <div className="glass-panel rounded-2xl border border-purple-500/30 p-6 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(168,85,247,0.2)] transition-all duration-500 hover:-translate-y-1">
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-500 to-pink-500 opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500"></div>
               <div className="relative z-10">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-500/50 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+                    <svg className="w-6 h-6 text-purple-300 drop-shadow-[0_0_8px_currentColor]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                     </svg>
                   </div>
-                  <div>
-                    <p className="text-xs font-mono text-slate-400 uppercase tracking-widest">Model Version</p>
-                    <p className="text-2xl font-bold text-white">{modelInfo?.version || 'v3.0.0'}</p>
-                  </div>
+                  <span className="px-3 py-1 rounded-full bg-purple-500/20 text-xs font-mono font-bold text-purple-300 border border-purple-500/30">ACTIVE</span>
                 </div>
+                <p className="text-xs font-mono text-purple-200/70 uppercase tracking-widest mb-1">Model Version</p>
+                <p className="text-4xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{modelInfo?.version || 'v3.0.0'}</p>
               </div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-blue-500/20 p-6 relative overflow-hidden group hover:border-blue-500/40 transition-all">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
+            <div className="glass-panel rounded-2xl border border-blue-500/30 p-6 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transition-all duration-500 hover:-translate-y-1">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500"></div>
               <div className="relative z-10">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/50 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.4)]">
+                    <svg className="w-6 h-6 text-blue-300 drop-shadow-[0_0_8px_currentColor]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
-                  <div>
-                    <p className="text-xs font-mono text-slate-400 uppercase tracking-widest">Total Features</p>
-                    <p className="text-2xl font-bold text-white">{featureImportance?.total_features || 45}</p>
-                  </div>
+                  <span className="px-3 py-1 rounded-full bg-blue-500/20 text-xs font-mono font-bold text-blue-300 border border-blue-500/30">FEATURES</span>
                 </div>
+                <p className="text-xs font-mono text-blue-200/70 uppercase tracking-widest mb-1">Total Inputs</p>
+                <p className="text-4xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{featureImportance?.total_features || 45}</p>
               </div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-green-500/20 p-6 relative overflow-hidden group hover:border-green-500/40 transition-all">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-all"></div>
+            <div className="glass-panel rounded-2xl border border-green-500/30 p-6 relative overflow-hidden group hover:shadow-[0_0_30px_rgba(34,197,94,0.2)] transition-all duration-500 hover:-translate-y-1">
+              <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-500"></div>
               <div className="relative z-10">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-green-500/20 border border-green-500/50 flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.4)]">
+                    <svg className="w-6 h-6 text-green-300 drop-shadow-[0_0_8px_currentColor]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div>
-                    <p className="text-xs font-mono text-slate-400 uppercase tracking-widest">ROC-AUC Score</p>
-                    <p className="text-2xl font-bold text-white">
-                      {modelInfo?.models?.ensemble?.roc_auc 
-                        ? (modelInfo.models.ensemble.roc_auc * 100).toFixed(2) + '%'
-                        : '99.8%'}
-                    </p>
-                  </div>
+                  <span className="px-3 py-1 rounded-full bg-green-500/20 text-xs font-mono font-bold text-green-300 border border-green-500/30">PERFORMANCE</span>
                 </div>
+                <p className="text-xs font-mono text-green-200/70 uppercase tracking-widest mb-1">ROC-AUC Score</p>
+                <p className="text-4xl font-black font-mono text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                  {modelInfo?.models?.ensemble?.roc_auc 
+                    ? (modelInfo.models.ensemble.roc_auc * 100).toFixed(2) + '%'
+                    : '99.8%'}
+                </p>
               </div>
             </div>
           </div>
@@ -193,54 +190,49 @@ export default function ModelInfo() {
 
       {activeTab === 'models' && modelInfo?.models && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-          <div className="glass-panel rounded-2xl border border-white/5 p-6">
-            <h3 className="text-lg font-bold text-white mb-6 flex items-center space-x-2">
-              <span>📈</span>
+          <div className="glass-panel rounded-2xl border border-white/5 p-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-green-500 opacity-50"></div>
+            <h3 className="text-xl font-bold text-white mb-8 flex items-center space-x-3">
+              <span className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/30 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]">📈</span>
               <span>Model Performance Comparison</span>
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {Object.entries(modelInfo.models).map(([name, metrics]: [string, any], idx) => {
-                const colors = ['purple', 'blue', 'green', 'orange']
+                const colors = ['purple', 'cyan', 'green', 'orange']
+                const gradients = [
+                  'from-purple-500 to-pink-500',
+                  'from-cyan-500 to-blue-500',
+                  'from-green-500 to-emerald-500',
+                  'from-orange-500 to-yellow-500'
+                ]
                 const color = colors[idx % colors.length]
+                const gradient = gradients[idx % gradients.length]
+
                 return (
-                  <div key={name} className={`p-5 rounded-xl bg-${color}-500/10 border border-${color}-500/30 hover:scale-105 transition-all`}>
-                    <p className={`text-sm font-bold text-${color}-400 mb-4 uppercase tracking-wider`}>{name}</p>
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-400">ROC-AUC</span>
-                          <span className={`font-bold text-${color}-400`}>{(metrics.roc_auc * 100).toFixed(2)}%</span>
-                        </div>
-                        <div className="w-full bg-black/40 rounded-full h-1.5">
-                          <div className={`h-1.5 rounded-full bg-${color}-500`} style={{ width: `${metrics.roc_auc * 100}%` }} />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-400">Precision</span>
-                          <span className={`font-bold text-${color}-400`}>{(metrics.precision * 100).toFixed(2)}%</span>
-                        </div>
-                        <div className="w-full bg-black/40 rounded-full h-1.5">
-                          <div className={`h-1.5 rounded-full bg-${color}-500`} style={{ width: `${metrics.precision * 100}%` }} />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-400">Recall</span>
-                          <span className={`font-bold text-${color}-400`}>{(metrics.recall * 100).toFixed(2)}%</span>
-                        </div>
-                        <div className="w-full bg-black/40 rounded-full h-1.5">
-                          <div className={`h-1.5 rounded-full bg-${color}-500`} style={{ width: `${metrics.recall * 100}%` }} />
-                        </div>
-                      </div>
-                      <div>
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-400">F1-Score</span>
-                          <span className={`font-bold text-${color}-400`}>{(metrics.f1 * 100).toFixed(2)}%</span>
-                        </div>
-                        <div className="w-full bg-black/40 rounded-full h-1.5">
-                          <div className={`h-1.5 rounded-full bg-${color}-500`} style={{ width: `${metrics.f1 * 100}%` }} />
-                        </div>
+                  <div key={name} className={`p-6 rounded-2xl bg-black/40 border border-${color}-500/30 hover:border-${color}-500/70 hover:shadow-[0_0_30px_rgba(var(--${color}-rgb),0.2)] transition-all duration-500 group relative`}>
+                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500 rounded-2xl`}></div>
+                    <div className="relative z-10">
+                      <p className={`text-lg font-black font-mono text-${color}-400 drop-shadow-[0_0_8px_currentColor] mb-6 uppercase tracking-wider`}>{name}</p>
+                      <div className="space-y-5">
+                        {[
+                          { label: 'ROC-AUC', value: metrics.roc_auc },
+                          { label: 'Precision', value: metrics.precision },
+                          { label: 'Recall', value: metrics.recall },
+                          { label: 'F1-Score', value: metrics.f1 }
+                        ].map((stat, i) => (
+                          <div key={i}>
+                            <div className="flex justify-between text-xs mb-2">
+                              <span className="text-slate-400 font-mono tracking-widest uppercase">{stat.label}</span>
+                              <span className={`font-bold font-mono text-${color}-300`}>{(stat.value * 100).toFixed(1)}%</span>
+                            </div>
+                            <div className="w-full bg-black/60 rounded-full h-1.5 overflow-hidden border border-white/5 relative">
+                              <div 
+                                className={`absolute left-0 top-0 bottom-0 bg-gradient-to-r ${gradient} shadow-[0_0_10px_currentColor] transition-all duration-1000 ease-out`} 
+                                style={{ width: `${stat.value * 100}%` }} 
+                              />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
