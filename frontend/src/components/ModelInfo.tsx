@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { getModelInfo, getFeatureImportance } from '@/lib/api'
 
 export default function ModelInfo() {
   const [modelInfo, setModelInfo] = useState<any>(null)
@@ -15,12 +15,12 @@ export default function ModelInfo() {
 
   const fetchModelInfo = async () => {
     try {
-      const [infoRes, featuresRes] = await Promise.all([
-        axios.get('http://localhost:8000/model/info'),
-        axios.get('http://localhost:8000/model/feature-importance')
+      const [infoData, featuresData] = await Promise.all([
+        getModelInfo(),
+        getFeatureImportance()
       ])
-      setModelInfo(infoRes.data)
-      setFeatureImportance(featuresRes.data)
+      setModelInfo(infoData)
+      setFeatureImportance(featuresData)
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch model info:', error)
