@@ -247,61 +247,80 @@ export default function ModelInfo() {
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
           {/* Feature Engineering */}
           {modelInfo?.feature_engineering && (
-            <div className="glass-panel rounded-2xl border border-white/5 p-6">
-              <h3 className="text-lg font-bold text-white mb-6 flex items-center space-x-2">
-                <span>🔧</span>
+            <div className="glass-panel rounded-2xl border border-white/5 p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[100px]"></div>
+              <h3 className="text-xl font-bold text-white mb-8 flex items-center space-x-3 relative z-10">
+                <span className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]">🔧</span>
                 <span>Feature Engineering Pipeline</span>
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(modelInfo.feature_engineering).map(([category, features]: [string, any]) => (
-                  <div key={category} className="p-5 rounded-xl bg-black/40 border border-white/5 hover:border-cyan-500/30 transition-all">
-                    <p className="text-sm font-bold text-cyan-400 mb-3 uppercase tracking-wider">
-                      {category.replace(/_/g, ' ')}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {Array.isArray(features) && features.map((feature: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-mono hover:scale-105 transition-all">
-                          {feature}
-                        </span>
-                      ))}
+              <div className="relative z-10">
+                <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent -translate-y-1/2"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+                  {Object.entries(modelInfo.feature_engineering).map(([category, features]: [string, any], idx) => (
+                    <div key={category} className={`p-6 rounded-2xl bg-black/60 border border-cyan-500/20 backdrop-blur-xl hover:border-cyan-400/50 hover:shadow-[0_0_30px_rgba(34,211,238,0.15)] transition-all duration-500 transform ${idx % 2 === 0 ? 'md:-translate-y-4' : 'md:translate-y-4'}`}>
+                      <div className="flex items-center space-x-3 mb-4 border-b border-white/5 pb-3">
+                        <div className="w-8 h-8 rounded-full bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center shadow-[0_0_10px_rgba(34,211,238,0.3)] text-cyan-300 font-bold font-mono text-xs">{idx + 1}</div>
+                        <p className="text-sm font-black text-white uppercase tracking-widest drop-shadow-[0_0_8px_currentColor]">
+                          {category.replace(/_/g, ' ')}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.isArray(features) && features.map((feature: string, fIdx: number) => (
+                          <span key={fIdx} className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-200 text-xs font-mono transition-all hover:bg-cyan-500/20 hover:scale-105 cursor-default shadow-sm">
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
           {/* Top Feature Importance */}
           {featureImportance?.feature_importance && (
-            <div className="glass-panel rounded-2xl border border-white/5 p-6">
-              <h3 className="text-lg font-bold text-white mb-6 flex items-center space-x-2">
-                <span>⭐</span>
-                <span>Top 10 Most Important Features</span>
+            <div className="glass-panel rounded-2xl border border-white/5 p-6 relative overflow-hidden">
+              <h3 className="text-xl font-bold text-white mb-8 flex items-center space-x-3">
+                <span className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/30 text-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.3)]">⭐</span>
+                <span>Top 10 Important Features</span>
               </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(featureImportance.feature_importance)
                   .slice(0, 10)
                   .map(([feature, importance]: [string, any], idx: number) => {
-                    const colors = ['purple', 'blue', 'cyan', 'green', 'yellow', 'orange', 'red', 'pink', 'indigo', 'teal']
-                    const color = colors[idx]
+                    const percentage = importance * 100
                     return (
-                      <div key={idx} className="p-4 rounded-xl bg-black/40 border border-white/5 hover:border-white/10 transition-all group">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-3">
-                            <span className={`w-8 h-8 rounded-lg bg-${color}-500/10 border border-${color}-500/30 flex items-center justify-center text-xs font-bold text-${color}-400`}>
-                              #{idx + 1}
-                            </span>
-                            <span className="text-sm font-mono text-white">{feature}</span>
-                          </div>
-                          <span className={`text-lg font-bold text-${color}-400`}>
-                            {(importance * 100).toFixed(2)}%
-                          </span>
+                      <div key={idx} className="p-4 rounded-xl bg-black/40 border border-white/5 hover:border-white/20 transition-all duration-300 group flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center relative bg-black/60">
+                          {/* Circular Progress logic roughly simulated with conic-gradient via inline style if possible, or just text */}
+                          <div className="absolute inset-0 rounded-full border-2 border-white/5"></div>
+                          <svg className="w-full h-full -rotate-90 absolute inset-0" viewBox="0 0 36 36">
+                            <path
+                              className="text-white/5"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none" stroke="currentColor" strokeWidth="2"
+                            />
+                            <path
+                              className={`${idx < 3 ? 'text-yellow-400 drop-shadow-[0_0_5px_currentColor]' : 'text-purple-400'} transition-all duration-1000`}
+                              strokeDasharray={`${percentage}, 100`}
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none" stroke="currentColor" strokeWidth="2"
+                            />
+                          </svg>
+                          <span className={`text-[10px] font-bold font-mono ${idx < 3 ? 'text-yellow-400' : 'text-purple-400'}`}>#{idx + 1}</span>
                         </div>
-                        <div className="w-full bg-black/60 rounded-full h-2 overflow-hidden">
-                          <div
-                            className={`h-2 rounded-full bg-gradient-to-r from-${color}-500 to-${color}-400 shadow-[0_0_10px_currentColor] transition-all duration-1000 group-hover:shadow-[0_0_20px_currentColor]`}
-                            style={{ width: `${importance * 100}%` }}
-                          />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm font-mono font-bold text-white group-hover:text-cyan-300 transition-colors">{feature}</span>
+                            <span className="text-xs font-mono text-slate-400">{percentage.toFixed(2)}%</span>
+                          </div>
+                          <div className="w-full bg-black/40 rounded-full h-1 overflow-hidden">
+                            <div
+                              className={`h-1 rounded-full bg-gradient-to-r ${idx < 3 ? 'from-yellow-500 to-orange-500' : 'from-purple-500 to-cyan-500'} shadow-[0_0_8px_currentColor]`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
                         </div>
                       </div>
                     )
@@ -314,88 +333,93 @@ export default function ModelInfo() {
 
       {activeTab === 'dataset' && modelInfo?.dataset && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-          <div className="glass-panel rounded-2xl border border-white/5 p-6">
-            <h3 className="text-lg font-bold text-white mb-6 flex items-center space-x-2">
-              <span>📊</span>
-              <span>Training Dataset Statistics</span>
+          <div className="glass-panel rounded-2xl border border-white/5 p-6 relative overflow-hidden">
+            <h3 className="text-xl font-bold text-white mb-8 flex items-center space-x-3 relative z-10">
+              <span className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]">📊</span>
+              <span>Training Dataset Overview</span>
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="p-5 rounded-xl bg-purple-500/10 border border-purple-500/30 hover:scale-105 transition-all">
-                <p className="text-xs font-mono text-purple-400 uppercase tracking-widest mb-2">Total Samples</p>
-                <p className="text-3xl font-bold text-white mb-1">
-                  {modelInfo.dataset.total_samples?.toLocaleString()}
-                </p>
-                <p className="text-xs text-slate-400">Training records</p>
-              </div>
-              <div className="p-5 rounded-xl bg-red-500/10 border border-red-500/30 hover:scale-105 transition-all">
-                <p className="text-xs font-mono text-red-400 uppercase tracking-widest mb-2">Fraud Rate</p>
-                <p className="text-3xl font-bold text-white mb-1">
-                  {(modelInfo.dataset.fraud_rate * 100).toFixed(2)}%
-                </p>
-                <p className="text-xs text-slate-400">Class imbalance</p>
-              </div>
-              <div className="p-5 rounded-xl bg-blue-500/10 border border-blue-500/30 hover:scale-105 transition-all">
-                <p className="text-xs font-mono text-blue-400 uppercase tracking-widest mb-2">Train Split</p>
-                <p className="text-3xl font-bold text-white mb-1">
-                  {modelInfo.dataset.train_samples?.toLocaleString()}
-                </p>
-                <p className="text-xs text-slate-400">80% of dataset</p>
-              </div>
-              <div className="p-5 rounded-xl bg-green-500/10 border border-green-500/30 hover:scale-105 transition-all">
-                <p className="text-xs font-mono text-green-400 uppercase tracking-widest mb-2">Test Split</p>
-                <p className="text-3xl font-bold text-white mb-1">
-                  {modelInfo.dataset.test_samples?.toLocaleString()}
-                </p>
-                <p className="text-xs text-slate-400">20% of dataset</p>
-              </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
+              {[
+                { label: 'Total Samples', value: modelInfo.dataset.total_samples?.toLocaleString(), desc: 'Training records', color: 'purple' },
+                { label: 'Fraud Rate', value: `${(modelInfo.dataset.fraud_rate * 100).toFixed(2)}%`, desc: 'Class imbalance', color: 'red' },
+                { label: 'Train Split', value: modelInfo.dataset.train_samples?.toLocaleString(), desc: '80% of dataset', color: 'blue' },
+                { label: 'Test Split', value: modelInfo.dataset.test_samples?.toLocaleString(), desc: '20% of dataset', color: 'green' }
+              ].map((stat, i) => (
+                <div key={i} className={`p-6 rounded-2xl bg-black/40 border border-${stat.color}-500/20 hover:border-${stat.color}-500/50 hover:shadow-[0_0_30px_rgba(var(--${stat.color}-rgb),0.15)] transition-all duration-300 group`}>
+                  <p className={`text-xs font-mono text-${stat.color}-400 uppercase tracking-widest mb-3 group-hover:drop-shadow-[0_0_8px_currentColor]`}>{stat.label}</p>
+                  <p className="text-3xl font-black font-mono text-white mb-2 tracking-tight">{stat.value}</p>
+                  <p className="text-xs text-slate-500 font-mono">{stat.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Data Distribution */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="glass-panel rounded-2xl border border-white/5 p-6">
-              <h3 className="text-sm font-bold text-white mb-4">Class Distribution</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-slate-400">Legitimate Transactions</span>
-                    <span className="text-sm font-bold text-green-400">
-                      {((1 - modelInfo.dataset.fraud_rate) * 100).toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-black/40 rounded-full h-3">
-                    <div className="h-3 rounded-full bg-green-500" style={{ width: `${(1 - modelInfo.dataset.fraud_rate) * 100}%` }} />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-slate-400">Fraudulent Transactions</span>
-                    <span className="text-sm font-bold text-red-400">
-                      {(modelInfo.dataset.fraud_rate * 100).toFixed(2)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-black/40 rounded-full h-3">
-                    <div className="h-3 rounded-full bg-red-500" style={{ width: `${modelInfo.dataset.fraud_rate * 100}%` }} />
-                  </div>
-                </div>
+      {activeTab === 'drift' && driftData && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+          <div className="glass-panel rounded-2xl border border-white/5 p-8 relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
+            <div className={`absolute top-0 left-0 w-64 h-64 rounded-full blur-[120px] -z-10 ${driftData.drift_detected ? 'bg-red-500/20' : 'bg-green-500/20'}`}></div>
+            
+            {/* Gauge */}
+            <div className="relative w-48 h-48 flex-shrink-0 flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                <path
+                  className="text-white/10"
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none" stroke="currentColor" strokeWidth="3"
+                />
+                <path
+                  className={`${driftData.drift_detected ? 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'text-green-500 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)]'} transition-all duration-1000`}
+                  strokeDasharray={`${(driftData.drift_score / driftData.threshold) * 50}, 100`}
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none" stroke="currentColor" strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-xs font-mono text-slate-400 uppercase tracking-widest mb-1">Drift Score</span>
+                <span className={`text-4xl font-black font-mono ${driftData.drift_detected ? 'text-red-400' : 'text-green-400'}`}>
+                  {driftData.drift_score.toFixed(3)}
+                </span>
               </div>
             </div>
 
-            <div className="glass-panel rounded-2xl border border-white/5 p-6">
-              <h3 className="text-sm font-bold text-white mb-4">Data Quality</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                  <span className="text-sm text-slate-300">Missing Values</span>
-                  <span className="text-sm font-bold text-green-400">0%</span>
+            <div className="flex-1 space-y-6 w-full">
+              <div>
+                <div className="flex items-center space-x-3 mb-2">
+                  <div className={`w-3 h-3 rounded-full animate-pulse ${driftData.drift_detected ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]' : 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]'}`}></div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">
+                    {driftData.drift_detected ? 'Data Drift Detected' : 'No Data Drift Detected'}
+                  </h3>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                  <span className="text-sm text-slate-300">Duplicates</span>
-                  <span className="text-sm font-bold text-green-400">0%</span>
+                <p className="text-sm font-mono text-slate-400">Threshold limit: <span className="text-white">{driftData.threshold}</span></p>
+              </div>
+
+              {/* Terminal window for recommendation */}
+              <div className="bg-black/80 rounded-xl border border-white/10 p-4 font-mono text-sm relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-full h-1 bg-white/5"></div>
+                <div className="flex items-center space-x-2 mb-3">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
+                  <span className="ml-2 text-[10px] text-slate-500">drift-analysis.log</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                  <span className="text-sm text-slate-300">Data Quality Score</span>
-                  <span className="text-sm font-bold text-green-400">100%</span>
-                </div>
+                <p className="text-slate-300">
+                  <span className="text-green-400">➜</span> <span className="text-cyan-400">analysis</span> check-drift
+                </p>
+                <p className="text-slate-400 mt-2">
+                  [{new Date(driftData.last_check).toLocaleTimeString()}] System recommendation:
+                </p>
+                <p className={`mt-1 font-bold ${driftData.drift_detected ? 'text-red-400' : 'text-green-400'}`}>
+                  {driftData.recommendation}
+                </p>
+                {driftData.features_drifted?.length > 0 && (
+                  <p className="mt-2 text-yellow-400">
+                    Drifted features: {driftData.features_drifted.join(', ')}
+                  </p>
+                )}
               </div>
             </div>
           </div>
