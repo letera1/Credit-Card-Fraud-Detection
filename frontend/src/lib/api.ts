@@ -56,3 +56,30 @@ export async function getHealth() {
   const response = await apiClient.get('/health')
   return response.data
 }
+
+export async function exportReport(format: string, timeRange: string) {
+  const response = await apiClient.post('/export-report', null, {
+    params: { format, time_range: timeRange }
+  })
+  return response.data
+}
+
+export async function getAuditLogs(limit: number = 100, userId?: string) {
+  const response = await apiClient.get('/audit-logs', {
+    params: { limit, user_id: userId }
+  })
+  return response.data
+}
+
+export async function createAuditLog(log: {
+  timestamp: string
+  user_id: string
+  action: string
+  resource: string
+  details: any
+  ip_address?: string
+}) {
+  const response = await apiClient.post('/audit-log', log)
+  return response.data
+}
+
