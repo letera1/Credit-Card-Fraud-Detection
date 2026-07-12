@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getAlerts } from '@/lib/api'
+import { getAlerts, resolveAlert } from '@/lib/api'
 
 interface Alert {
   alert_id: number; transaction_id: string; amount: number; merchant: string; timestamp: string; risk_score: number; status: string; alert_type: string; location: string
