@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getModelInfo, getModelStatus, getModelVersions, retrainModel, getModelLogs } from '@/lib/api'
+import { getModelInfo, getModelComparison, getAnalytics } from '@/lib/api'
 
 interface ModelVersion {
   version: string; created_at: string; metrics: Record<string, number>;
@@ -9,7 +9,7 @@ interface ModelVersion {
 
 export default function ModelInfo() {
   const [modelInfo, setModelInfo] = useState<any>(null)
-  const [modelStatus, setModelStatus] = useState<any>(null)
+  const [metrics, setMetrics] = useState<Record<string, number>>({})
   const [versions, setVersions] = useState<ModelVersion[]>([])
   const [logs, setLogs] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'status' | 'versions' | 'logs'>('status')
@@ -20,21 +20,18 @@ export default function ModelInfo() {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(() => {
-      getModelStatus().then(setModelStatus).catch(() => {})
-    }, 15000)
+    const interval = setInterval(fetchData, 15000)
     return () => clearInterval(interval)
   }, [])
 
   async function fetchData() {
     try {
-      const [info, status, vers, logsRes] = await Promise.all([
-        getModelInfo(), getModelStatus(), getModelVersions(), getModelLogs(50)
+      const [info, comp, analytics] = await Promise.all([
+        getModelInfo(), getModelComparison(), getAnalytics()
       ])
       setModelInfo(info)
-      setModelStatus(status)
-      setVersions(vers?.versions ?? [])
-      setLogs(logsRes?.logs ?? [])
+      setVersions(comp?.models ?? [])
+      if (analytics) setMetrics(analytics)
     } catch (error) { console.error(error) }
   }
 
