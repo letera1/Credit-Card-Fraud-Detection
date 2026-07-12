@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-
 import { getAnalytics } from '@/lib/api'
 
 interface Analytics {
@@ -13,27 +12,24 @@ interface Analytics {
   alerts_active: number
 }
 
-// Simple Animated Counter Component
-const AnimatedCounter = ({ value, suffix = '', decimals = 0 }: { value: number, suffix?: string, decimals?: number }) => {
+const AnimatedCounter = ({ value, suffix = '', decimals = 0 }: { value: number; suffix?: string; decimals?: number }) => {
   const [count, setCount] = useState(0)
+  const [started, setStarted] = useState(false)
 
   useEffect(() => {
-    let start = 0
-    const duration = 1500 // 1.5s
-    const increment = value / (duration / 16) // 60fps
-    
+    if (started) return
+    setStarted(true)
+    const duration = 1000
+    const increment = value / (duration / 16)
+    const startTime = Date.now()
     const timer = setInterval(() => {
-      start += increment
-      if (start >= value) {
-        setCount(value)
-        clearInterval(timer)
-      } else {
-        setCount(start)
-      }
+      const elapsed = Date.now() - startTime
+      const newVal = Math.min(elapsed / duration * value, value)
+      setCount(newVal)
+      if (newVal >= value) clearInterval(timer)
     }, 16)
-    
     return () => clearInterval(timer)
-  }, [value])
+  }, [value, started])
 
   return <span>{count.toFixed(decimals)}{suffix}</span>
 }
@@ -44,7 +40,7 @@ export default function AnalyticsDashboard() {
 
   useEffect(() => {
     fetchAnalytics()
-    const interval = setInterval(fetchAnalytics, 5000)
+    const interval = setInterval(fetchAnalytics, 10000)
     return () => clearInterval(interval)
   }, [])
 
@@ -52,121 +48,162 @@ export default function AnalyticsDashboard() {
     try {
       const data = await getAnalytics()
       setAnalytics(data)
-      setLoading(false)
     } catch (error) {
       console.error('Failed to fetch analytics:', error)
+    } finally {
       setLoading(false)
     }
   }
 
   if (loading || !analytics) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="glass-panel rounded-2xl p-5 animate-pulse h-32">
-            <div className="h-3 bg-white/10 rounded w-1/2 mb-4"></div>
-            <div className="h-8 bg-white/5 rounded w-3/4"></div>
+          <div key={i} className="glass-panel rounded-2xl p-5 animate-pulse h-28">
+            <div className="h-3 bg-muted/60 rounded w-1/2 mb-4" />
+            <div className="h-8 bg-muted/40 rounded w-2/3" />
           </div>
         ))}
       </div>
     )
   }
 
+  const statCards = [
+    {
+      title: 'Total Inferences',
+      value: analytics.total_transactions,
+      growth: '+12%',
+      color: 'purple',
+      icon: 'M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z',
+    },
+    {
+      title: 'Fraud Detected',
+      value: analytics.fraud_detected,
+      subtitle: 'Score > 80 threshold',
+      color: 'red',
+      pulse: true,
+      valueColor: 'red',
+      icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
+    },
+    {
+      title: 'Global Fraud Rate',
+      value: analytics.fraud_rate,
+      suffix: '%',
+      decimals: 1,
+      chart: true,
+      color: 'orange',
+      valueColor: 'foreground',
+    },
+    {
+      title: 'Mean Risk Score',
+      value: analytics.avg_risk_score,
+      decimals: 1,
+      progressBar: true,
+      danger: analytics.avg_risk_score >= 80,
+      color: 'purple',
+      valueColor: 'foreground',
+    },
+    {
+      title: 'High Risk Flags',
+      value: analytics.high_risk_transactions,
+      color: 'yellow',
+      subtitle: 'Requires Manual Review',
+      valueColor: 'yellow',
+    },
+    {
+      title: 'System Health',
+      subtitle: 'Ensemble Active',
+      health: true,
+      color: 'green',
+    },
+  ];
+
+  const colorMap = {
+    purple: { text: 'text-purple-500', text2: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', gradient: 'from-purple-500 to-red-500' },
+    red: { text: 'text-red-400', text2: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', gradient: 'from-red-500 to-red-600' },
+    orange: { text: 'text-orange-400', text2: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30', gradient: 'from-orange-500 to-orange-600' },
+    yellow: { text: 'text-yellow-400', text2: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30', gradient: 'from-yellow-400 to-yellow-600' },
+    green: { text: 'text-green-400', text2: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
+    blue: { text: 'text-blue-400', text2: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' },
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-      {/* Total Inference Count */}
-      <div className="glass-panel rounded-2xl p-5 hover:border-slate-700 transition-all group relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-          <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
-        </div>
-        <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-1">Total Inferences</p>
-        <p className="text-3xl font-bold font-mono text-white tracking-tight mt-2">
-          <AnimatedCounter value={analytics.total_transactions} />
-        </p>
-        <div className="mt-3 flex items-center text-[10px] text-green-400 font-mono">
-          <span className="mr-1">↑</span> 12% vs last hour
-        </div>
-      </div>
-
-      {/* Fraud Detected */}
-      <div className="glass-panel rounded-2xl p-5 relative overflow-hidden group hover:border-red-500/30 transition-all">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent z-0"></div>
-        <div className="relative z-10">
-          <p className="text-[10px] font-mono text-red-400 uppercase tracking-widest mb-1 flex justify-between">
-            Fraud Detected
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
-          </p>
-          <p className="text-3xl font-bold font-mono text-red-400 tracking-tight mt-2">
-            <AnimatedCounter value={analytics.fraud_detected} />
-          </p>
-          <div className="mt-3 flex items-center text-[10px] text-red-400/70 font-mono">
-            Score &gt; 80 threshold
+    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      {statCards.map((card, idx) => {
+        const colors = colorMap[card.color as keyof typeof colorMap];
+        const valueColor = colorMap[card.valueColor || card.color as keyof typeof colorMap];
+        const showDanger = card.danger && analytics?.avg_risk_score >= 80;
+        return (
+          <div
+            key={idx}
+            className={`glass-panel rounded-2xl p-5 relative overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 ${card.pulse ? `hover:border-red-500/50 ${showDanger ? 'border-red-500/30' : ''}` : 'hover:border-primary/20 border-border/50'}`}
+          >
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+              <svg className="w-14 h-14 text-foreground" fill="currentColor" viewBox="0 0 24 24">
+                <path d={card.icon || ''} />
+              </svg>
+            </div>
+            <p className="text-2xs font-mono text-muted-foreground uppercase tracking-widest mb-1">
+              {card.title}
+            </p>
+            {card.health ? (
+              <div className="mt-2">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/25">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                  </span>
+                  <span className="text-sm font-bold text-green-400">OPTIMAL</span>
+                </span>
+              </div>
+            ) : (
+              <>
+                <p className="text-3xl font-bold tracking-tight text-foreground mt-2 font-mono">
+                  <AnimatedCounter
+                    value={card.value || 0}
+                    suffix={card.suffix || ''}
+                    decimals={card.decimals || 0}
+                  />
+                  {!card.suffix && !card.decimals && card.title !== 'Total Inferences' && card.title !== 'fraud_detected' && card.title !== 'high_risk' && card.title !== 'high_risk_flags' && card.title !== 'High Risk Flags' && card.title !== 'Fraud Detected' && card.title !== 'Total Inferences' && null}
+                </p>
+                {card.growth && (
+                  <div className="mt-3 flex items-center gap-1 text-xs font-mono text-green-500">
+                    <span className="text-green-500">&uarr;</span> {card.growth} vs last hour
+                  </div>
+                )}
+                {card.subtitle && (
+                  <p className="mt-3 text-xs font-mono text-muted-foreground">{card.subtitle}</p>
+                )}
+                {card.chart && (
+                  <svg className="w-full h-8 mt-2 opacity-30" viewBox="0 0 100 20" preserveAspectRatio="none">
+                    <path strokeWidth="2" stroke={colors.text === 'text-purple-500' ? '#a855f7' : colors.text === 'text-red-400' ? '#f87171' : '#d97706'} strokeLinecap="round" strokeLinejoin="round" fill="none" d="M0,15 L20,10 L40,12 L60,5 L80,8 L100,2" />
+                  </svg>
+                )}
+                {card.progressBar && (
+                  <div className="w-full bg-black/20 rounded-full h-1.5 mt-3 overflow-hidden">
+                    <div
+                      className="h-full transition-all duration-1000 rounded-full"
+                      style={{
+                        width: `${Math.min(analytics?.avg_risk_score || 0, 100)}%`,
+                        background: analytics?.avg_risk_score >= 80 ? '#ef4444' : analytics?.avg_risk_score >= 50 ? '#eab308' : '#22c55e'
+                      }}
+                    />
+                  </div>
+                )}
+                {card.pulse && (
+                  <div className="absolute top-4 right-4">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping absolute opacity-75" />
+                    <span className="w-2 h-2 rounded-full bg-red-500 relative" />
+                  </div>
+                )}
+                {!card.growth && !card.subtitle && !card.chart && !card.progressBar && !card.pulse && !card.health && (
+                  <div className="mt-2 h-6" />
+                )}
+              </>
+            )}
           </div>
-        </div>
-      </div>
-
-      {/* Fraud Rate */}
-      <div className="glass-panel rounded-2xl p-5 relative overflow-hidden group hover:border-orange-500/30 transition-all">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent z-0"></div>
-        <div className="relative z-10">
-          <p className="text-[10px] font-mono text-orange-400/80 uppercase tracking-widest mb-1">Global Fraud Rate</p>
-          <p className="text-3xl font-bold font-mono text-white tracking-tight mt-2">
-            <AnimatedCounter value={analytics.fraud_rate} suffix="%" decimals={1} />
-          </p>
-          {/* Mini line chart SVG */}
-          <svg className="w-full h-8 mt-2 opacity-50 stroke-orange-500 fill-none" viewBox="0 0 100 20" preserveAspectRatio="none">
-            <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M0,15 L20,10 L40,12 L60,5 L80,8 L100,2" />
-          </svg>
-        </div>
-      </div>
-
-      {/* Avg Risk Score */}
-      <div className="glass-panel rounded-2xl p-5 hover:border-purple-500/30 transition-all relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent"></div>
-        <div className="relative z-10">
-          <p className="text-[10px] font-mono text-purple-400 uppercase tracking-widest mb-1">Mean Risk Score</p>
-          <p className="text-3xl font-bold font-mono text-white tracking-tight mt-2">
-            <AnimatedCounter value={analytics.avg_risk_score} decimals={1} />
-          </p>
-          <div className="w-full bg-black/50 rounded-full h-1 mt-3 overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-purple-500 to-red-500 transition-all duration-1000 ease-out"
-              style={{ width: `${analytics.avg_risk_score}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* High Risk Flags */}
-      <div className="glass-panel rounded-2xl p-5 hover:border-yellow-500/30 transition-all">
-        <p className="text-[10px] font-mono text-yellow-500/80 uppercase tracking-widest mb-1">High Risk Flags</p>
-        <p className="text-3xl font-bold font-mono text-yellow-400 tracking-tight mt-2">
-          <AnimatedCounter value={analytics.high_risk_transactions} />
-        </p>
-        <p className="text-[10px] font-mono text-slate-500 mt-3 flex items-center">
-          <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          Requires Manual Review
-        </p>
-      </div>
-
-      {/* System Status */}
-      <div className="glass-panel rounded-2xl p-5 border-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.05)]">
-        <p className="text-[10px] font-mono text-green-400 uppercase tracking-widest mb-1 flex justify-between items-center">
-          System Health
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-          </span>
-        </p>
-        <p className="text-2xl font-bold font-mono text-white tracking-tight mt-2 self-center">
-          OPTIMAL
-        </p>
-        <p className="text-[10px] font-mono text-green-400/60 mt-3 inline-flex items-center px-1.5 py-0.5 rounded border border-green-500/20 bg-green-500/10">
-          Ensemble Active
-        </p>
-      </div>
+        );
+      })}
     </div>
   )
 }
