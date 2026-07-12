@@ -15,7 +15,6 @@ export default function PredictionForm({ onResult, loading, setLoading }: Predic
   const [rawInput, setRawInput] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  // Test data templates - calibrated for correct model predictions
   const testDataTemplates = {
     legitimate: {
       Time: 45000, V1: 0.05, V2: -0.12, V3: 0.08, V4: 0.03,
@@ -72,7 +71,6 @@ export default function PredictionForm({ onResult, loading, setLoading }: Predic
       if (useRawInput) {
         data = JSON.parse(rawInput)
       } else {
-        // Empty form submit generates realistic benign data if not filled
         data = {
           Time: Math.floor(Math.random() * 86400),
           V1: Math.random() * 2 - 1, V2: Math.random() * 2 - 1, V3: Math.random() * 2 - 1,
@@ -90,7 +88,6 @@ export default function PredictionForm({ onResult, loading, setLoading }: Predic
 
       const response = await axios.post('http://localhost:8000/predict', data)
       onResult(response.data)
-      // Play a little UI trick by keeping loading state up slightly longer for cool aesthetic effect
       setTimeout(() => setLoading(false), 800)
     } catch (err: any) {
       setError(err.message || 'Failed to connect to ML API')
@@ -99,123 +96,109 @@ export default function PredictionForm({ onResult, loading, setLoading }: Predic
   }
 
   return (
-    <div className="glass-panel rounded-2xl p-8 border border-white/10 relative overflow-hidden h-full flex flex-col">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500"></div>
+    <div className="glass-panel rounded-2xl p-6 md:p-8 border-border/50 relative overflow-hidden h-full flex flex-col">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-blue-500" />
 
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-lg font-bold text-white tracking-tight">Data Ingestion</h2>
-          <p className="text-xs font-mono text-slate-400 mt-1">Send payload to Inference Engine</p>
+          <h2 className="text-lg font-bold text-foreground tracking-tight">Data Ingestion</h2>
+          <p className="text-xs font-mono text-muted-foreground mt-1">Send payload to Inference Engine</p>
         </div>
-        
-        {/* Toggle Mode */}
-        <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
+        <div className="flex bg-muted/30 rounded-lg p-1 border border-border/60">
           <button
             type="button"
             onClick={() => setUseRawInput(false)}
-            className={`px-3 py-1.5 text-xs font-mono rounded-md transition-all ${!useRawInput ? 'bg-white/10 text-white shadow' : 'text-slate-500 hover:text-white'}`}
+            className={`px-3 py-1.5 text-xs font-mono rounded-md transition-all ${!useRawInput ? 'bg-card text-foreground shadow-sm border border-border/80' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Auto/Benign
+            Auto
           </button>
           <button
             type="button"
             onClick={() => setUseRawInput(true)}
-            className={`px-3 py-1.5 text-xs font-mono rounded-md transition-all ${useRawInput ? 'bg-white/10 text-white shadow' : 'text-slate-500 hover:text-white'}`}
+            className={`px-3 py-1.5 text-xs font-mono rounded-md transition-all ${useRawInput ? 'bg-card text-foreground shadow-sm border border-border/80' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            JSON/Raw
+            JSON
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 mb-6 flex items-start space-x-3">
-          <svg className="w-5 h-5 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          <p className="text-sm font-mono text-red-400">{error}</p>
+        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 mb-6 flex items-start space-x-3">
+          <svg className="w-5 h-5 text-red-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-sm font-mono text-red-500">{error}</p>
         </div>
       )}
 
       <form onSubmit={handlePredict} className="flex-1 flex flex-col">
         {useRawInput ? (
-          <div className="flex-1 flex flex-col min-h-[300px]">
-            <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-3">
+          <div className="flex-1 flex flex-col">
+            <label className="text-2xs font-mono text-muted-foreground uppercase tracking-widest mb-3">
               JSON Payload Window
             </label>
-            
-            {/* Quick Load Test Data Buttons */}
             <div className="grid grid-cols-2 gap-2 mb-3">
-              <button 
-                type="button" 
-                onClick={() => loadTestData('legitimate')}
-                className="px-3 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 hover:border-green-500/50 rounded-lg text-xs font-mono text-green-400 transition-all flex items-center justify-center space-x-2"
-              >
+              <button type="button" onClick={() => loadTestData('legitimate')}
+                className="px-3 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 hover:border-green-500/50 rounded-lg text-xs font-mono text-green-500 transition-all flex items-center justify-center gap-1.5">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                 <span>Legitimate</span>
               </button>
-              
-              <button 
-                type="button" 
-                onClick={() => loadTestData('moderate')}
-                className="px-3 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 hover:border-yellow-500/50 rounded-lg text-xs font-mono text-yellow-400 transition-all flex items-center justify-center space-x-2"
-              >
+              <button type="button" onClick={() => loadTestData('moderate')}
+                className="px-3 py-2 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 hover:border-yellow-500/50 rounded-lg text-xs font-mono text-yellow-500 transition-all flex items-center justify-center gap-1.5">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                <span>Moderate Risk</span>
+                <span>Moderate</span>
               </button>
-              
-              <button 
-                type="button" 
-                onClick={() => loadTestData('fraud')}
-                className="px-3 py-2 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 hover:border-orange-500/50 rounded-lg text-xs font-mono text-orange-400 transition-all flex items-center justify-center space-x-2"
-              >
+              <button type="button" onClick={() => loadTestData('fraud')}
+                className="px-3 py-2 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 hover:border-orange-500/50 rounded-lg text-xs font-mono text-orange-500 transition-all flex items-center justify-center gap-1.5">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <span>Fraud</span>
               </button>
-              
-              <button 
-                type="button" 
-                onClick={() => loadTestData('critical')}
-                className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-lg text-xs font-mono text-red-400 transition-all flex items-center justify-center space-x-2"
-              >
+              <button type="button" onClick={() => loadTestData('critical')}
+                className="px-3 py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-lg text-xs font-mono text-red-500 transition-all flex items-center justify-center gap-1.5">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                <span>Critical Fraud</span>
+                <span>Critical</span>
               </button>
             </div>
-
             <textarea
               value={rawInput}
               onChange={(e) => setRawInput(e.target.value)}
-              className="flex-1 w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs font-mono text-green-400 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all resize-none scrollbar-hide shadow-inner"
-              placeholder={'{\n  "V1": 0.123,\n  "V2": -1.456\n  ...\n}'}
+              className="flex-1 w-full bg-muted/40 border border-border/60 rounded-xl p-4 text-xs font-mono text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all resize-none scrollbar-hide min-h-[200px]"
+              placeholder={`{\n  "V1": 0.123,\n  "V2": -1.456\n}`}
               spellCheck="false"
             />
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-xl bg-black/20 p-8 text-center group transition-colors hover:border-white/20 hover:bg-black/30">
-            <div className="w-16 h-16 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mb-4 group-hover:bg-blue-500/20 group-hover:scale-105 transition-all">
-               <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+          <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-border/60 rounded-xl bg-muted/20 p-8 text-center group hover:border-primary/30 hover:bg-primary/5 transition-all min-h-[200px]">
+            <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+              <svg className="w-8 h-8 text-primary/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
             </div>
-            <h3 className="text-white font-semibold mb-2 tracking-wide">Auto-generate Batch Data</h3>
-            <p className="text-sm text-slate-400 font-mono mb-6 max-w-sm">Will generate randomized standard deviation vectors spanning all 28 PCA dimensions to simulate a benign credit transaction.</p>
+            <h3 className="text-foreground font-semibold mb-2">Auto-generate Batch Data</h3>
+            <p className="text-sm text-muted-foreground font-mono max-w-sm">Generate randomized PCA vectors to simulate a benign credit transaction.</p>
           </div>
         )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-mono font-bold py-4 px-6 rounded-xl transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] active:scale-[0.98] flex justify-center items-center relative overflow-hidden"
+          className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-semibold py-4 px-6 rounded-xl transition-all shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/40 active:scale-[0.98] flex justify-center items-center relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <>
-              {/* Processing scan line animation */}
-              <div className="absolute top-0 bottom-0 left-[-20%] w-1/5 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1.5s_infinite]"></div>
+              <div className="absolute top-0 bottom-0 left-[-20%] w-1/5 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
               EXECUTING INFERENCE...
             </>
           ) : (
             <>
-              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
               RUN PREDICTION MODEL
             </>
           )}
