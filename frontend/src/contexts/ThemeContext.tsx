@@ -51,12 +51,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeState(prev => prev === 'light' ? 'dark' : 'light')
   }
 
+  const providerValue = { theme, setTheme, toggleTheme, mounted }
+
   if (!mounted) {
-    return <div style={{ visibility: 'hidden' }}>{children}</div>
+    return (
+      <ThemeContext.Provider value={providerValue}>
+        <div style={{ visibility: 'hidden' }}>{children}</div>
+      </ThemeContext.Provider>
+    )
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme, mounted }}>
+    <ThemeContext.Provider value={providerValue}>
       {children}
     </ThemeContext.Provider>
   )
