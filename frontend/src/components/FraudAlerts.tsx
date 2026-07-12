@@ -1,430 +1,192 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { getAlerts, resolveAlert as resolveAlertApi, createAuditLog } from '@/lib/api'
+import { useState, useEffect } from 'react'
+import { getAlerts, acknowledgeAlert } from '@/lib/api'
 
 interface Alert {
-  alert_id: string
-  transaction_id: string
-  severity: string
-  message: string
-  timestamp: string
-  status: string
-  risk_score?: number
-  amount?: number
-  location?: string
+  alert_id: number; transaction_id: string; amount: number; merchant: string; timestamp: string; risk_score: number; status: string; alert_type: string; location: string
 }
 
 export default function FraudAlerts() {
   const [alerts, setAlerts] = useState<Alert[]>([])
-  const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('all')
-  const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null)
-  
-  // Audits and interaction states
-  const [soundEnabled, setSoundEnabled] = useState(false)
-  const [snoozedAlerts, setSnoozedAlerts] = useState<string[]>([])
-  const [escalatedAlerts, setEscalatedAlerts] = useState<string[]>([])
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [filterAlertType, setFilterAlertType] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [acknowledgingId, setAcknowledgingId] = useState<number | null>(null)
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null)
 
   useEffect(() => {
     fetchAlerts()
-    const interval = setInterval(fetchAlerts, 5000)
+    const interval = setInterval(fetchAlerts, 10000)
     return () => clearInterval(interval)
   }, [])
 
-  const fetchAlerts = async () => {
+  async function fetchAlerts() {
     try {
-      const data = await getAlerts()
-      setAlerts(data.alerts || [])
-      setLoading(false)
-    } catch (error) {
-      console.error('Failed to fetch alerts:', error)
-      setLoading(false)
-    }
+      const res = await getAlerts()
+      setAlerts(res?.alerts ?? [])
+    } catch (error) { console.error(error) }
+    finally { setIsLoading(false) }
   }
 
-  const resolveAlert = async (alertId: string) => {
+  async function handleAcknowledge(alertId: number) {
+    setAcknowledgingId(alertId)
     try {
-      await resolveAlertApi(alertId)
-      // Log resolution to compliance audit trail
-      await createAuditLog({
-        timestamp: new Date().toISOString(),
-        user_id: "sec_ops_admin",
-        action: "ALERT_RESOLVED",
-        resource: alertId,
-        details: { status: "resolved", handler: "manual_mitigation" },
-        ip_address: "192.168.10.45"
-      })
-      fetchAlerts()
-    } catch (error) {
-      console.error('Failed to resolve alert:', error)
-    }
-  }
-
-  const handleSnooze = (alertId: string) => {
-    setSnoozedAlerts(prev => [...prev, alertId])
-  }
-
-  const handleEscalation = async (alertId: string) => {
-    setEscalatedAlerts(prev => [...prev, alertId])
-    // Log escalation to compliance audits
-    try {
-      await createAuditLog({
-        timestamp: new Date().toISOString(),
-        user_id: "sec_ops_admin",
-        action: "ALERT_ESCALATED",
-        resource: alertId,
-        details: { tier: 2, action: "sent_to_tier_2_sec_ops" },
-        ip_address: "192.168.10.45"
-      })
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  const getSeverityConfig = (severity: string) => {
-    const configs = {
-      CRITICAL: {
-        bg: 'bg-red-500/10',
-        border: 'border-red-500/30',
-        text: 'text-red-400',
-        glow: 'shadow-[0_0_20px_rgba(239,68,68,0.15)]',
-        icon: '🔴',
-        pulse: 'animate-pulse'
-      },
-      HIGH: {
-        bg: 'bg-orange-500/10',
-        border: 'border-orange-500/30',
-        text: 'text-orange-400',
-        glow: 'shadow-[0_0_15px_rgba(249,115,22,0.1)]',
-        icon: '🟠',
-        pulse: ''
-      },
-      MEDIUM: {
-        bg: 'bg-yellow-500/10',
-        border: 'border-yellow-500/30',
-        text: 'text-yellow-400',
-        glow: '',
-        icon: '🟡',
-        pulse: ''
-      },
-      LOW: {
-        bg: 'bg-blue-500/10',
-        border: 'border-blue-500/30',
-        text: 'text-blue-400',
-        glow: '',
-        icon: '🔵',
-        pulse: ''
-      }
-    }
-    return configs[severity as keyof typeof configs] || configs.LOW
-  }
-
-  const stats = {
-    total: alerts.length,
-    critical: alerts.filter(a => a.severity === 'CRITICAL' && a.status === 'active' && !snoozedAlerts.includes(a.alert_id)).length,
-    high: alerts.filter(a => a.severity === 'HIGH' && a.status === 'active' && !snoozedAlerts.includes(a.alert_id)).length,
-    medium: alerts.filter(a => a.severity === 'MEDIUM' && a.status === 'active' && !snoozedAlerts.includes(a.alert_id)).length,
-    active: alerts.filter(a => a.status === 'active' && !snoozedAlerts.includes(a.alert_id)).length,
-    resolved: alerts.filter(a => a.status === 'resolved' || snoozedAlerts.includes(a.alert_id)).length
+      await acknowledgeAlert(alertId)
+      setAlerts(prev => prev.map(a => a.alert_id === alertId ? { ...a, status: 'acknowledged' } : a))
+    } catch (error) { console.error(error) }
+    finally { setAcknowledgingId(null) }
   }
 
   const filteredAlerts = alerts.filter(a => {
-    const isSnoozed = snoozedAlerts.includes(a.alert_id)
-    if (filter === 'all') return true
-    if (filter === 'active') return a.status === 'active' && !isSnoozed
-    if (filter === 'resolved') return a.status === 'resolved' || isSnoozed
-    return a.severity === filter
+    if (filterStatus !== 'all' && a.status !== filterStatus) return false
+    if (filterAlertType !== 'all' && a.alert_type !== filterAlertType) return false
+    if (searchQuery && !a.transaction_id.toLowerCase().includes(searchQuery.toLowerCase()) && !a.merchant?.toLowerCase().includes(searchQuery.toLowerCase())) return false
+    return true
   })
 
-  // Simulated SHAP feature attributions for alerts (dynamic based on risk score)
-  const getShapValues = (riskScore: number = 75) => {
-    return [
-      { name: 'V14 (Amount Shift)', val: riskScore * 0.25, isPositive: true },
-      { name: 'V4 (Geo anomaly)', val: riskScore * 0.18, isPositive: true },
-      { name: 'Scaled_Amount', val: riskScore * 0.12, isPositive: true },
-      { name: 'V10 (Terminal speed)', val: -5.4, isPositive: false },
-      { name: 'V12 (Account variance)', val: 4.8, isPositive: true }
-    ]
+  const getRiskColor = (score: number) => {
+    if (score >= 90) return 'text-red-500'
+    if (score >= 70) return 'text-orange-500'
+    if (score >= 40) return 'text-yellow-500'
+    return 'text-emerald-500'
   }
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'critical': return <span className="px-2 py-0.5 text-2xs font-mono bg-red-500/10 text-red-500 border border-red-500/20 rounded-full">Critical</span>
+      case 'acknowledged': return <span className="px-2 py-0.5 text-2xs font-mono bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-full">Acknowledged</span>
+      case 'resolved': return <span className="px-2 py-0.5 text-2xs font-mono bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full">Resolved</span>
+      default: return <span className="px-2 py-0.5 text-2xs font-mono bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded-full">{status}</span>
+    }
+  }
+
+  if (isLoading && alerts.length === 0) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="flex items-center space-x-3">
+        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <span className="text-sm text-muted-foreground font-mono">Hailing security alerts...</span>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="space-y-6 text-slate-100 animate-in fade-in duration-500">
-      {/* Header & Threat Feed status */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-2xl bg-black/40 border border-white/5 backdrop-blur-md">
+    <div className="space-y-8 animate-in text-foreground">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 rounded-2xl bg-muted/20 border border-border/50">
         <div>
-          <div className="flex items-center space-x-3 mb-2">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-fuchsia-400 to-blue-400 bg-clip-text text-transparent">Fraud Alerts</h2>
-            <div className="flex items-center px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20 text-[9px] font-mono text-red-400 tracking-wider">
-              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping mr-1"></span>
-              STREAM ACTIVE
-            </div>
-          </div>
-          <p className="text-sm font-mono text-slate-400">Security Operations Console (SOC) classification log</p>
-        </div>
-        <div className="flex items-center space-x-3 w-full md:w-auto">
-          {/* Sound Toggle */}
-          <button 
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`px-3 py-2 border rounded-lg text-xs font-mono transition-all flex items-center space-x-1.5 ${
-              soundEnabled 
-                ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' 
-                : 'bg-black/40 border-white/10 text-slate-400 hover:text-white'
-            }`}
-          >
-            <span>{soundEnabled ? '🔊 Sound Enabled' : '🔇 Sound Muted'}</span>
-          </button>
-
-          <span className="px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-xs font-mono text-slate-400">
-            T_Limit: <span className="text-white">0.50</span>
-          </span>
+          <h2 className="text-3xl font-bold gradient-text mb-2">Fraud Alerts</h2>
+          <p className="text-sm font-mono text-muted-foreground">Real-time threat detection and incident response panel</p>
         </div>
       </div>
 
-      {/* Stats Bento boxes */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div 
-          onClick={() => setFilter('all')}
-          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'all' ? 'border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.2)]' : 'border-white/5 bg-card/40'}`}
-        >
-          <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest mb-2">Total Feed</p>
-          <p className="text-3xl font-bold font-mono text-white">{stats.total}</p>
+      <div className="flex flex-col md:flex-row gap-4 p-4 rounded-2xl glass-panel border-border/50">
+        <div className="flex-1">
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <input type="text" placeholder="Search by Transaction ID or Merchant..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-muted/50 border border-border/60 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary/50 transition-colors font-mono" />
+          </div>
         </div>
-
-        <div 
-          onClick={() => setFilter('CRITICAL')}
-          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'CRITICAL' ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-red-500/20 bg-card/40'}`}
-        >
-          <p className="text-[10px] font-mono text-red-400 uppercase tracking-widest mb-2 flex items-center">
-            <span className="mr-1 animate-pulse">🔴</span> Critical
-          </p>
-          <p className="text-3xl font-bold font-mono text-red-400">{stats.critical}</p>
-        </div>
-
-        <div 
-          onClick={() => setFilter('HIGH')}
-          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'HIGH' ? 'border-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.2)]' : 'border-orange-500/20 bg-card/40'}`}
-        >
-          <p className="text-[10px] font-mono text-orange-400 uppercase tracking-widest mb-2 flex items-center">
-            <span className="mr-1">🟠</span> High
-          </p>
-          <p className="text-3xl font-bold font-mono text-orange-400">{stats.high}</p>
-        </div>
-
-        <div 
-          onClick={() => setFilter('MEDIUM')}
-          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'MEDIUM' ? 'border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.2)]' : 'border-yellow-500/20 bg-card/40'}`}
-        >
-          <p className="text-[10px] font-mono text-yellow-400 uppercase tracking-widest mb-2 flex items-center">
-            <span className="mr-1">🟡</span> Medium
-          </p>
-          <p className="text-3xl font-bold font-mono text-yellow-400">{stats.medium}</p>
-        </div>
-
-        <div 
-          onClick={() => setFilter('active')}
-          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'active' ? 'border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.2)]' : 'border-blue-500/20 bg-card/40'}`}
-        >
-          <p className="text-[10px] font-mono text-blue-400 uppercase tracking-widest mb-2">Active</p>
-          <p className="text-3xl font-bold font-mono text-blue-400">{stats.active}</p>
-        </div>
-
-        <div 
-          onClick={() => setFilter('resolved')}
-          className={`glass-panel rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${filter === 'resolved' ? 'border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : 'border-emerald-500/20 bg-card/40'}`}
-        >
-          <p className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest mb-2">Resolved</p>
-          <p className="text-3xl font-bold font-mono text-emerald-400">{stats.resolved}</p>
+        <div className="flex gap-3">
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-3 py-2 bg-muted/50 border border-border/60 rounded-lg text-xs font-mono text-foreground focus:outline-none focus:border-primary/50 cursor-pointer">
+            <option value="all">All Status</option>
+            <option value="critical">Critical</option>
+            <option value="acknowledged">Acknowledged</option>
+            <option value="resolved">Resolved</option>
+          </select>
+          <select value={filterAlertType} onChange={(e) => setFilterAlertType(e.target.value)}
+            className="px-3 py-2 bg-muted/50 border border-border/60 rounded-lg text-xs font-mono text-foreground focus:outline-none focus:border-primary/50 cursor-pointer">
+            <option value="all">All Types</option>
+            <option value="high_amount">High Amount</option>
+            <option value="velocity">Velocity</option>
+            <option value="new_merchant">New Merchant</option>
+            <option value="location_anomaly">Location Anomaly</option>
+          </select>
         </div>
       </div>
 
-      {/* Main Alerts List */}
-      <div className="glass-panel rounded-2xl border border-white/5 bg-card/40 overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="space-y-3">
+        {filteredAlerts.length === 0 ? (
+          <div className="glass-panel rounded-2xl p-8 text-center border-border/50">
+            <svg className="w-12 h-12 mx-auto text-muted-foreground/40 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <p className="text-sm text-muted-foreground font-mono">No alerts match current filters.</p>
           </div>
-        ) : filteredAlerts.length === 0 ? (
-          <div className="text-center py-20 bg-black/10">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-              <svg className="w-10 h-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p className="text-white font-mono font-bold text-lg mb-1">ALL VECTORS CLEAR</p>
-            <p className="text-xs text-slate-500 font-mono">No active intrusion logs or anomalies recorded.</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-white/5">
-            {filteredAlerts.map((alert) => {
-              const config = getSeverityConfig(alert.severity)
-              const isExpanded = expandedAlertId === alert.alert_id
-              const isSnoozed = snoozedAlerts.includes(alert.alert_id)
-              const isEscalated = escalatedAlerts.includes(alert.alert_id)
-              const isResolved = alert.status === 'resolved' || isSnoozed
-
-              return (
-                <div 
-                  key={alert.alert_id} 
-                  className={`transition-all duration-300 ${config.glow} ${isExpanded ? 'bg-black/35' : 'hover:bg-white/5'}`}
-                >
-                  {/* Alert summary block */}
-                  <div 
-                    onClick={() => setExpandedAlertId(isExpanded ? null : alert.alert_id)}
-                    className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer select-none"
-                  >
-                    <div className="flex-1 space-y-2">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono border ${config.bg} ${config.border} ${config.text} ${config.pulse}`}>
-                          <span>{config.icon}</span>
-                          <span>{alert.severity}</span>
-                        </span>
-                        
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${
-                          isResolved 
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25' 
-                            : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/25'
-                        }`}>
-                          {isResolved ? 'RESOLVED' : isEscalated ? 'ESCALATED (T2)' : 'ACTIVE'}
-                        </span>
-                        
-                        <span className="text-[10px] font-mono text-slate-500">
-                          {new Date(alert.timestamp).toLocaleString()}
-                        </span>
-                      </div>
-                      
-                      <p className="text-white font-medium text-lg tracking-tight">{alert.message}</p>
-                      
-                      <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-mono text-slate-400 pt-1">
-                        <span className="flex items-center">
-                          <span className="text-slate-600 mr-1.5">ID:</span>
-                          <span>{alert.transaction_id.slice(0, 16)}...</span>
-                        </span>
-                        {alert.amount && (
-                          <span className="flex items-center">
-                            <span className="text-slate-600 mr-1.5">Amount:</span>
-                            <span className="text-white font-bold">${alert.amount.toLocaleString()}</span>
-                          </span>
-                        )}
-                        {alert.risk_score && (
-                          <span className="flex items-center">
-                            <span className="text-slate-600 mr-1.5">Risk Score:</span>
-                            <span className={`font-bold ${config.text}`}>{alert.risk_score}%</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Expand/Collapse Chevron indicator */}
-                    <div className="flex items-center justify-end shrink-0 pl-4">
-                      <svg className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
+        ) : filteredAlerts.map((alert) => (
+          <div key={alert.alert_id}
+            className="glass-panel rounded-2xl p-5 border-border/50 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+            onClick={() => setSelectedAlert(alert)}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start space-x-4">
+                <div className={`w-2.5 h-2.5 rounded-full mt-1.5 ${alert.status === 'critical' ? 'bg-red-500 animate-pulse' : alert.status === 'acknowledged' ? 'bg-blue-500' : 'bg-emerald-500'}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-3">
+                    <p className="font-mono font-bold text-sm text-foreground">{alert.transaction_id}</p>
+                    {getStatusBadge(alert.status)}
                   </div>
-
-                  {/* Expanded Inspector Console */}
-                  {isExpanded && (
-                    <div className="px-6 pb-6 pt-2 border-t border-white/5 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in slide-in-from-top-2 duration-300">
-                      
-                      {/* SHAP Force Plot column */}
-                      <div className="p-4 bg-black/40 border border-white/5 rounded-xl space-y-4">
-                        <div>
-                          <p className="text-xs font-mono font-bold text-white uppercase mb-1">Local SHAP Feature attributions</p>
-                          <p className="text-[10px] text-slate-400 font-mono">Quantifies feature influence on the neural ensemble probability threshold.</p>
-                        </div>
-
-                        <div className="space-y-3">
-                          {getShapValues(alert.risk_score || 75).map((att, idx) => (
-                            <div key={idx} className="space-y-1 text-[10px] font-mono">
-                              <div className="flex justify-between items-center text-slate-400">
-                                <span>{att.name}</span>
-                                <span className={att.isPositive ? 'text-red-400' : 'text-emerald-400'}>
-                                  {att.isPositive ? `+${att.val.toFixed(1)}%` : `${att.val.toFixed(1)}%`}
-                                </span>
-                              </div>
-                              <div className="w-full bg-black/60 h-1.5 rounded-full overflow-hidden flex relative">
-                                {att.isPositive ? (
-                                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${Math.min(100, att.val * 1.5)}%` }}></div>
-                                ) : (
-                                  <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, Math.abs(att.val) * 1.5)}%` }}></div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Anomaly parameters & SOC Actions */}
-                      <div className="flex flex-col justify-between p-4 bg-black/40 border border-white/5 rounded-xl">
-                        <div className="space-y-2">
-                          <p className="text-xs font-mono font-bold text-white uppercase mb-2">Triggered anomaly flags</p>
-                          <div className="space-y-1.5">
-                            <div className="flex items-center space-x-2 text-xs font-mono text-slate-300">
-                              <span className="text-red-400">🚨</span>
-                              <span>Probability vectors exceeded classification threshold of 0.50</span>
-                            </div>
-                            {alert.amount && alert.amount > 2000 && (
-                              <div className="flex items-center space-x-2 text-xs font-mono text-slate-300">
-                                <span className="text-yellow-400">⚠</span>
-                                <span>High Amount outlier: transaction amount exceeds p99 benchmark</span>
-                              </div>
-                            )}
-                            <div className="flex items-center space-x-2 text-xs font-mono text-slate-300">
-                              <span className="text-yellow-400">⚠</span>
-                              <span>Abnormal PCA variance V14 / V4 parameters</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Controls/Buttons */}
-                        <div className="flex flex-wrap gap-3 pt-6">
-                          {!isResolved ? (
-                            <>
-                              <button
-                                onClick={() => resolveAlert(alert.alert_id)}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs font-bold rounded-lg transition-all flex items-center space-x-1.5 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
-                              >
-                                <span>✓</span>
-                                <span>Resolve Threat</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleSnooze(alert.alert_id)}
-                                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 font-mono text-xs font-bold rounded-lg border border-white/10 transition-all flex items-center space-x-1.5"
-                              >
-                                <span>⏳</span>
-                                <span>Snooze Feed</span>
-                              </button>
-
-                              {!isEscalated && (
-                                <button
-                                  onClick={() => handleEscalation(alert.alert_id)}
-                                  className="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/35 border border-purple-500/35 text-purple-300 font-mono text-xs font-bold rounded-lg transition-all flex items-center space-x-1.5"
-                                >
-                                  <span>⚙</span>
-                                  <span>Escalate (T2)</span>
-                                </button>
-                              )}
-                            </>
-                          ) : (
-                            <div className="w-full text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 flex items-center space-x-2">
-                              <span>✓</span>
-                              <span>Threat mitigated and recorded in security registry database.</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                    </div>
-                  )}
-
+                  <p className="text-sm text-muted-foreground mt-1 font-mono">
+                    {new Date(alert.timestamp).toLocaleString()} &middot; {alert.merchant || 'Unknown Merchant'}
+                  </p>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <span className="text-2xs font-mono px-2 py-0.5 bg-muted/30 border border-border/40 rounded text-muted-foreground">{alert.alert_type.replace(/_/g, ' ')}</span>
+                    {alert.location && <span className="text-2xs font-mono text-muted-foreground">&middot; {alert.location}</span>}
+                  </div>
                 </div>
-              )
-            })}
+              </div>
+              <div className="flex items-center space-x-6">
+                <div className="text-right">
+                  <p className={`text-lg font-bold font-mono ${getRiskColor(alert.risk_score)}`}>{alert.risk_score}</p>
+                  <p className="text-2xs text-muted-foreground font-mono">Risk Score</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold font-mono text-foreground">${alert.amount.toLocaleString()}</p>
+                  <p className="text-2xs text-muted-foreground font-mono">Amount</p>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); handleAcknowledge(alert.alert_id) }}
+                  disabled={alert.status !== 'critical' || acknowledgingId === alert.alert_id}
+                  className={`px-4 py-2 rounded-xl text-xs font-mono font-medium border transition-all
+                    ${alert.status === 'critical'
+                      ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20 cursor-pointer'
+                      : 'bg-muted/20 border-border/30 text-muted-foreground cursor-not-allowed'}
+                  `}>
+                  {acknowledgingId === alert.alert_id ? (
+                    <span className="flex items-center space-x-1.5"><span className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></span><span>Processing</span></span>
+                  ) : alert.status === 'critical' ? 'Acknowledge' : alert.status.charAt(0).toUpperCase() + alert.status.slice(1)}
+                </button>
+              </div>
+            </div>
           </div>
-        )}
+        ))}
       </div>
+
+      {selectedAlert && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={() => setSelectedAlert(null)}>
+          <div className="glass-panel w-full max-w-lg rounded-2xl border-border/60 overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-border/50 flex justify-between items-center bg-muted/20">
+              <h3 className="text-lg font-bold text-foreground font-mono">Alert Detail</h3>
+              <button onClick={() => setSelectedAlert(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-5 font-mono text-sm">
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Transaction ID</span><span className="font-bold text-foreground">{selectedAlert.transaction_id}</span></div>
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Alert Type</span><span className="font-bold text-foreground capitalize">{selectedAlert.alert_type.replace(/_/g, ' ')}</span></div>
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Risk Score</span><span className={`font-bold ${getRiskColor(selectedAlert.risk_score)}`}>{selectedAlert.risk_score}</span></div>
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Amount</span><span className="font-bold text-foreground">${selectedAlert.amount.toLocaleString()}</span></div>
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Merchant</span><span className="text-foreground">{selectedAlert.merchant || 'N/A'}</span></div>
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Location</span><span className="text-foreground">{selectedAlert.location || 'N/A'}</span></div>
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Timestamp</span><span className="text-foreground">{new Date(selectedAlert.timestamp).toLocaleString()}</span></div>
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Status</span>{getStatusBadge(selectedAlert.status)}</div>
+              <button onClick={() => { if (selectedAlert.status === 'critical') handleAcknowledge(selectedAlert.alert_id); setSelectedAlert(null) }}
+                disabled={selectedAlert.status !== 'critical'}
+                className="w-full mt-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 disabled:from-muted disabled:to-muted disabled:text-muted-foreground font-semibold font-mono text-xs tracking-wider text-white rounded-xl shadow-lg shadow-purple-500/25 transition-all">
+                {selectedAlert.status === 'critical' ? 'ACKNOWLEDGE & START INVESTIGATION' : 'Alert Already Handled'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
