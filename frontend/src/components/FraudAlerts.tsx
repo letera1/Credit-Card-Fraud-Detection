@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getAlerts, acknowledgeAlert } from '@/lib/api'
+import { getAlerts } from '@/lib/api'
 
 interface Alert {
   alert_id: number; transaction_id: string; amount: number; merchant: string; timestamp: string; risk_score: number; status: string; alert_type: string; location: string
@@ -33,7 +33,7 @@ export default function FraudAlerts() {
   async function handleAcknowledge(alertId: number) {
     setAcknowledgingId(alertId)
     try {
-      await acknowledgeAlert(alertId)
+      await resolveAlert(String(alertId))
       setAlerts(prev => prev.map(a => a.alert_id === alertId ? { ...a, status: 'acknowledged' } : a))
     } catch (error) { console.error(error) }
     finally { setAcknowledgingId(null) }

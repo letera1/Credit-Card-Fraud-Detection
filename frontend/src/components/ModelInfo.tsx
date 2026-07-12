@@ -115,9 +115,11 @@ export default function ModelInfo() {
         </div>
 
         <div className="p-6">
-          {activeTab === 'status' && modelStatus && (
+          {activeTab === 'status' && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {Object.entries(modelStatus.metrics || modelStatus || {}).filter(([k]) => !['model_type', 'status', 'version'].includes(k)).map(([key, val]) => (
+              {Object.entries(metrics).length === 0 ? (
+                <p className="text-sm text-muted-foreground font-mono col-span-full text-center py-8">No metrics available.</p>
+              ) : Object.entries(metrics).filter(([k]) => !['model_type', 'status', 'version'].includes(k)).map(([key, val]) => (
                 <div key={key} className="p-4 bg-muted/20 border border-border/40 rounded-xl">
                   <p className="text-2xs font-mono text-muted-foreground uppercase mb-2">{key.replace(/_/g, ' ')}</p>
                   <p className="text-xl font-bold font-mono text-foreground">

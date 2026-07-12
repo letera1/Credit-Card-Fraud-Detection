@@ -131,7 +131,7 @@ export default function AnalyticsDashboard() {
     <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-4">
       {statCards.map((card, idx) => {
         const colors = colorMap[card.color as keyof typeof colorMap];
-        const valueColor = colorMap[card.valueColor || card.color as keyof typeof colorMap];
+        const valueColor = colorMap[(card.valueColor || card.color) as keyof typeof colorMap];
         const showDanger = card.danger && analytics?.avg_risk_score >= 80;
         return (
           <div
