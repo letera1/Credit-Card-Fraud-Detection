@@ -129,7 +129,7 @@ export default function FraudAlerts() {
                     {new Date(alert.timestamp).toLocaleString()} &middot; {alert.merchant || 'Unknown Merchant'}
                   </p>
                   <div className="flex items-center space-x-2 mt-2">
-                    <span className="text-2xs font-mono px-2 py-0.5 bg-muted/30 border border-border/40 rounded text-muted-foreground">{alert.alert_type.replace(/_/g, ' ')}</span>
+                    <span className="text-2xs font-mono px-2 py-0.5 bg-muted/30 border border-border/40 rounded text-muted-foreground">{(alert.alert_type ?? '').replace(/_/g, ' ')}</span>
                     {alert.location && <span className="text-2xs font-mono text-muted-foreground">&middot; {alert.location}</span>}
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export default function FraudAlerts() {
                   <p className="text-2xs text-muted-foreground font-mono">Risk Score</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold font-mono text-foreground">${alert.amount.toLocaleString()}</p>
+                  <p className="text-lg font-bold font-mono text-foreground">${(alert.amount ?? 0).toLocaleString()}</p>
                   <p className="text-2xs text-muted-foreground font-mono">Amount</p>
                 </div>
                 <button onClick={(e) => { e.stopPropagation(); handleAcknowledge(alert.alert_id) }}
@@ -171,9 +171,9 @@ export default function FraudAlerts() {
             </div>
             <div className="p-6 space-y-5 font-mono text-sm">
               <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Transaction ID</span><span className="font-bold text-foreground">{selectedAlert.transaction_id}</span></div>
-              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Alert Type</span><span className="font-bold text-foreground capitalize">{selectedAlert.alert_type.replace(/_/g, ' ')}</span></div>
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Alert Type</span><span className="font-bold text-foreground capitalize">{(selectedAlert.alert_type ?? '').replace(/_/g, ' ')}</span></div>
               <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Risk Score</span><span className={`font-bold ${getRiskColor(selectedAlert.risk_score)}`}>{selectedAlert.risk_score}</span></div>
-              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Amount</span><span className="font-bold text-foreground">${selectedAlert.amount.toLocaleString()}</span></div>
+              <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Amount</span><span className="font-bold text-foreground">${(selectedAlert.amount ?? 0).toLocaleString()}</span></div>
               <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Merchant</span><span className="text-foreground">{selectedAlert.merchant || 'N/A'}</span></div>
               <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Location</span><span className="text-foreground">{selectedAlert.location || 'N/A'}</span></div>
               <div className="flex items-center space-x-3"><span className="text-muted-foreground w-28">Timestamp</span><span className="text-foreground">{new Date(selectedAlert.timestamp).toLocaleString()}</span></div>
