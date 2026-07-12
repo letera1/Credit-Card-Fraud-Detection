@@ -54,7 +54,7 @@ export default function ModelInfo() {
     setRetrainProgress(90)
     setRetrainLogs(p => [...p, '[SYS] Serializing model artifact and updating registry...'])
     try {
-      await retrainModel()
+      await fetch('http://localhost:8000/retrain', { method: 'POST' })
       setRetrainLogs(p => [...p, '[SYS] Retraining complete. Model promoted to staging.'])
       setRetrainProgress(100)
     } catch (error) {
@@ -91,9 +91,9 @@ export default function ModelInfo() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Model Type', value: modelInfo?.model_type || modelStatus?.model_type || 'Ensemble', sub: 'XGBoost + RF stacking', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
-          { label: 'Model Status', value: modelStatus?.status || 'Active', sub: 'Serving live traffic', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', color: statusColor(modelStatus?.status) },
-          { label: 'Version', value: modelInfo?.version || modelStatus?.version || 'v3.0.1', sub: 'Latest stable release', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+          { label: 'Model Type', value: modelInfo?.model_type || 'Ensemble', sub: 'XGBoost + RF stacking', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
+          { label: 'Model Status', value: 'Active', sub: 'Serving live traffic', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-emerald-500' },
+          { label: 'Version', value: modelInfo?.version || 'v3.0.1', sub: 'Latest stable release', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
         ].map((c, i) => (
           <div key={i} className="glass-panel rounded-2xl p-6 border-border/50">
             <p className="text-2xs font-mono text-muted-foreground uppercase tracking-widest mb-4">{c.label}</p>
