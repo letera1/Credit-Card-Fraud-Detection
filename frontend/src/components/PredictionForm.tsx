@@ -234,7 +234,7 @@ export default function PredictionForm({ onResult, loading, setLoading }: Predic
             </div>
             <textarea
               value={rawInput}
-              onChange={(e) => setRawInput(e.target.value)}
+              onChange={(e) => { setRawInput(e.target.value); setSelectedTemplate(null) }}
               className="flex-1 w-full bg-muted/40 border border-border/60 rounded-xl p-4 text-xs font-mono text-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all resize-none scrollbar-hide min-h-[200px]"
               placeholder={`{\n  "V1": 0.123,\n  "V2": -1.456\n}`}
               spellCheck="false"

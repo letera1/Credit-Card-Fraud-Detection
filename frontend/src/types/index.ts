@@ -40,7 +40,9 @@ export interface PredictionResult {
   // Optional fields for advanced UI rendering
   transaction_id?: string
   risk_level?: string
+  risk_score?: number
   recommended_action?: string
+  template_type?: string
   shap_explanation?: {
     feature_names: string[]
     shap_values: number[]
