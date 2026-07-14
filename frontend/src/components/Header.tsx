@@ -185,7 +185,7 @@ export default function Header({ activeView, onOpenCommandPalette }: HeaderProps
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-card/95 backdrop-blur-2xl border border-border/50 rounded-xl shadow-2xl z-50 overflow-hidden animate-in slide-down duration-200">
+            <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-card/95 backdrop-blur-2xl border border-border/50 rounded-xl shadow-2xl z-50 overflow-hidden animate-slide-down">
               <div className="px-4 py-3 border-b border-border/40 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
@@ -277,7 +277,7 @@ export default function Header({ activeView, onOpenCommandPalette }: HeaderProps
           </button>
 
           {showUserMenu && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-card/95 backdrop-blur-2xl border border-border/50 rounded-xl shadow-2xl z-50 overflow-hidden animate-in slide-down duration-200">
+            <div className="absolute right-0 top-full mt-2 w-56 bg-card/95 backdrop-blur-2xl border border-border/50 rounded-xl shadow-2xl z-50 overflow-hidden animate-slide-down">
               {/* User Info */}
               <div className="px-4 py-3 border-b border-border/40">
                 <p className="text-sm font-semibold text-foreground">ML Engineer</p>
