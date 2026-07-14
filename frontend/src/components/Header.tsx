@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { usePathname } from 'next/navigation'
 import { useTheme } from '@/contexts/ThemeContext'
 
 interface HeaderProps {
@@ -25,7 +24,6 @@ const viewLabels: Record<string, { title: string; subtitle: string }> = {
 
 export default function Header({ activeView, onOpenCommandPalette, onToggleMobileMenu, mobileMenuOpen }: HeaderProps) {
   const { theme, toggleTheme } = useTheme()
-  const pathname = usePathname()
   const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
