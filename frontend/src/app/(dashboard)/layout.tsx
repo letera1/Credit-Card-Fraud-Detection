@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Main Area */}
-      <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-screen relative">
         <Header
           activeView={activeView}
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
