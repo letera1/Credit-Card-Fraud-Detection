@@ -129,6 +129,19 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
   const pathname = usePathname()
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 })
+  const [activeAlertCount, setActiveAlertCount] = useState(0)
+
+  useEffect(() => {
+    const fetchAlertCount = async () => {
+      try {
+        const res = await getAlerts()
+        setActiveAlertCount(res?.active ?? 0)
+      } catch {}
+    }
+    fetchAlertCount()
+    const interval = setInterval(fetchAlertCount, 10000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleNavHover = (e: React.MouseEvent, itemId: string) => {
     if (!collapsed) return
