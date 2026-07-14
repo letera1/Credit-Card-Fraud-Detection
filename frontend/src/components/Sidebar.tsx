@@ -230,7 +230,7 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
             {intelItems.map((item) => (
               <NavLink
                 key={item.id}
-                item={item}
+                item={item.id === 'alerts' ? { ...item, badge: activeAlertCount } : item}
                 activeView={activeView}
                 collapsed={collapsed}
                 hoveredItem={hoveredItem}
