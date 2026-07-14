@@ -121,6 +121,15 @@ class Alert(BaseModel):
     message: str
     timestamp: str
     status: str = "active"
+    risk_score: int = 0
+    alert_type: str = "high_amount"
+    amount: float = 0.0
+    merchant: str = "Unknown"
+    location: str = "Unknown"
+    solution: str = ""
+    recommended_action: str = ""
+    anomaly_flags: List[str] = Field(default_factory=list)
+    confidence: float = 0.0
 
 
 class AnalyticsResponse(BaseModel):
@@ -262,15 +271,45 @@ async def predict(transaction: Transaction):
         }
         transaction_history.append(transaction_record)
         
+        # Determine alert type based on flags
+        alert_type = "high_amount"
+        if "Late-night transaction" in anomaly_flags:
+            alert_type = "location_anomaly"
+        elif "Abnormal PCA feature values" in anomaly_flags:
+            alert_type = "velocity"
+        elif "Unusually high transaction amount" in anomaly_flags:
+            alert_type = "high_amount"
+        else:
+            alert_type = "new_merchant"
+
+        # Generate recommended solution based on risk
+        if risk_score >= 80:
+            solution = "Immediate block recommended. Contact cardholder to verify identity. Freeze card until manual review is complete. File SAR if confirmed fraud."
+        elif risk_score >= 60:
+            solution = "Hold transaction for manual review. Send verification SMS/email to cardholder. Monitor subsequent transactions for 24 hours."
+        elif risk_score >= 30:
+            solution = "Allow with enhanced monitoring. Flag account for velocity checks. Log for batch review."
+        else:
+            solution = "Transaction appears legitimate. No immediate action required. Continue standard monitoring."
+
         # Create alert if fraud detected
         if result['is_fraud']:
             alert = {
-                "alert_id": f"ALT-{len(alert_queue)}",
+                "alert_id": f"ALT-{len(alert_queue) + 1}",
                 "transaction_id": transaction_id,
                 "severity": risk_level,
                 "message": f"Fraud detected with {risk_score}% risk score",
                 "timestamp": datetime.now().isoformat(),
-                "status": "active"
+                "status": "active",
+                "risk_score": risk_score,
+                "alert_type": alert_type,
+                "amount": round(float(transaction.Scaled_Amount) * 5000, 2),
+                "merchant": f"Merchant-{hash(transaction_id) % 9000 + 1000}",
+                "location": anomaly_flags[0] if anomaly_flags else "Verified Location",
+                "solution": solution,
+                "recommended_action": recommended_action,
+                "anomaly_flags": anomaly_flags,
+                "confidence": round(float(confidence) * 100, 1),
             }
             alert_queue.append(alert)
         
