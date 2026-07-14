@@ -37,6 +37,92 @@ const configItems: NavItemData[] = [
   { id: 'settings', label: 'Configuration', href: '/settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' },
 ]
 
+function NavLink({
+  item,
+  activeView,
+  collapsed,
+  hoveredItem,
+  tooltipPos,
+  onHover,
+  onLeave,
+}: {
+  item: NavItemData
+  activeView: string
+  collapsed: boolean
+  hoveredItem: string | null
+  tooltipPos: { top: number; left: number }
+  onHover: (e: React.MouseEvent, itemId: string) => void
+  onLeave: () => void
+}) {
+  const isActive = activeView === item.id
+  const hasBadge = item.badge && item.badge > 0
+
+  return (
+    <div className="relative">
+      <Link
+        href={item.href}
+        onMouseEnter={(e) => onHover(e, item.id)}
+        onMouseLeave={onLeave}
+        className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden ${
+          collapsed ? 'px-0 py-2.5 justify-center mx-2' : 'px-3 py-2.5'
+        } ${
+          isActive
+            ? 'text-white'
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+        }`}
+        title={collapsed ? item.label : undefined}
+      >
+        {isActive && (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl" />
+            <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-gradient-to-b from-purple-500 to-blue-500 shadow-[0_0_12px_rgba(168,85,247,0.5)]" />
+          </>
+        )}
+
+        <div className={`relative z-10 flex items-center justify-center ${collapsed ? '' : 'w-5 h-5'}`}>
+          <svg
+            className={`w-5 h-5 flex-shrink-0 transition-colors duration-200 ${
+              isActive ? 'text-purple-400' : 'text-muted-foreground group-hover:text-purple-400'
+            }`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={isActive ? 2 : 1.5}
+              d={item.icon}
+            />
+          </svg>
+        </div>
+
+        {!collapsed && (
+          <span className="relative z-10 flex-1 text-left truncate">{item.label}</span>
+        )}
+
+        {!collapsed && hasBadge && (
+          <span className="relative z-10 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500/15 border border-red-500/30 text-[10px] font-bold text-red-400 font-mono">
+            {item.badge}
+          </span>
+        )}
+      </Link>
+
+      {collapsed && hoveredItem === item.id && (
+        <div
+          className="fixed z-[100] px-3 py-2 rounded-lg bg-card/95 backdrop-blur-xl border border-border/60 shadow-2xl text-sm font-medium text-foreground whitespace-nowrap pointer-events-none animate-in fade-in duration-150"
+          style={{ top: tooltipPos.top, left: tooltipPos.left, transform: 'translateY(-50%)' }}
+        >
+          {item.label}
+          {hasBadge && (
+            <span className="ml-2 text-[10px] font-mono text-red-400">{item.badge} alerts</span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Sidebar({ activeView, collapsed = false, onToggleCollapse }: SidebarProps) {
   const { theme, toggleTheme } = useTheme()
   const pathname = usePathname()
@@ -48,76 +134,6 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     setTooltipPos({ top: rect.top + rect.height / 2, left: rect.right + 12 })
     setHoveredItem(itemId)
-  }
-
-  const NavLink = ({ item }: { item: NavItemData }) => {
-    const isActive = activeView === item.id
-    const hasBadge = item.badge && item.badge > 0
-
-    return (
-      <div className="relative">
-        <Link
-          href={item.href}
-          onMouseEnter={(e) => handleNavHover(e, item.id)}
-          onMouseLeave={() => setHoveredItem(null)}
-          className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden ${
-            collapsed ? 'px-0 py-2.5 justify-center mx-2' : 'px-3 py-2.5'
-          } ${
-            isActive
-              ? 'text-white'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-          }`}
-          title={collapsed ? item.label : undefined}
-        >
-          {isActive && (
-            <>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl" />
-              <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-gradient-to-b from-purple-500 to-blue-500 shadow-[0_0_12px_rgba(168,85,247,0.5)]" />
-            </>
-          )}
-
-          <div className={`relative z-10 flex items-center justify-center ${collapsed ? '' : 'w-5 h-5'}`}>
-            <svg
-              className={`w-5 h-5 flex-shrink-0 transition-colors duration-200 ${
-                isActive ? 'text-purple-400' : 'text-muted-foreground group-hover:text-purple-400'
-              }`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={isActive ? 2 : 1.5}
-                d={item.icon}
-              />
-            </svg>
-          </div>
-
-          {!collapsed && (
-            <span className="relative z-10 flex-1 text-left truncate">{item.label}</span>
-          )}
-
-          {!collapsed && hasBadge && (
-            <span className="relative z-10 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500/15 border border-red-500/30 text-[10px] font-bold text-red-400 font-mono">
-              {item.badge}
-            </span>
-          )}
-        </Link>
-
-        {collapsed && hoveredItem === item.id && (
-          <div
-            className="fixed z-[100] px-3 py-2 rounded-lg bg-card/95 backdrop-blur-xl border border-border/60 shadow-2xl text-sm font-medium text-foreground whitespace-nowrap pointer-events-none animate-in fade-in duration-150"
-            style={{ top: tooltipPos.top, left: tooltipPos.left, transform: 'translateY(-50%)' }}
-          >
-            {item.label}
-            {hasBadge && (
-              <span className="ml-2 text-[10px] font-mono text-red-400">{item.badge} alerts</span>
-            )}
-          </div>
-        )}
-      </div>
-    )
   }
 
   const SectionLabel = ({ label, count, showDot = false }: { label: string; count?: number; showDot?: boolean }) => {
@@ -179,14 +195,36 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
         <div>
           <SectionLabel label="SYSTEM" count={systemItems.length} />
           <nav className="space-y-0.5">
-            {systemItems.map((item) => <NavLink key={item.id} item={item} />)}
+            {systemItems.map((item) => (
+              <NavLink
+                key={item.id}
+                item={item}
+                activeView={activeView}
+                collapsed={collapsed}
+                hoveredItem={hoveredItem}
+                tooltipPos={tooltipPos}
+                onHover={handleNavHover}
+                onLeave={() => setHoveredItem(null)}
+              />
+            ))}
           </nav>
         </div>
 
         <div>
           <SectionLabel label="INTELLIGENCE" count={intelItems.length} showDot />
           <nav className="space-y-0.5">
-            {intelItems.map((item) => <NavLink key={item.id} item={item} />)}
+            {intelItems.map((item) => (
+              <NavLink
+                key={item.id}
+                item={item}
+                activeView={activeView}
+                collapsed={collapsed}
+                hoveredItem={hoveredItem}
+                tooltipPos={tooltipPos}
+                onHover={handleNavHover}
+                onLeave={() => setHoveredItem(null)}
+              />
+            ))}
           </nav>
         </div>
 
@@ -195,7 +233,18 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
         <div>
           <SectionLabel label="CONFIGURATION" count={configItems.length} />
           <nav className="space-y-0.5">
-            {configItems.map((item) => <NavLink key={item.id} item={item} />)}
+            {configItems.map((item) => (
+              <NavLink
+                key={item.id}
+                item={item}
+                activeView={activeView}
+                collapsed={collapsed}
+                hoveredItem={hoveredItem}
+                tooltipPos={tooltipPos}
+                onHover={handleNavHover}
+                onLeave={() => setHoveredItem(null)}
+              />
+            ))}
           </nav>
         </div>
       </div>
