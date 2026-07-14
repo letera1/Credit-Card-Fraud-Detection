@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
+import CommandPalette from '@/components/CommandPalette'
 import RiskScoreCard from '@/components/RiskScoreCard'
 import FraudDistributionChart from '@/components/FraudDistributionChart'
 import PredictionForm from '@/components/PredictionForm'
@@ -17,12 +18,17 @@ import ModelPerformance from '@/components/ModelPerformance'
 import AdvancedAnalytics from '@/components/AdvancedAnalytics'
 import { PredictionResult } from '@/types'
 import { getAnalytics } from '@/lib/api'
+import { useTheme } from '@/contexts/ThemeContext'
 
 export default function Home() {
   const [result, setResult] = useState<PredictionResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [activeView, setActiveView] = useState('overview')
   const [analytics, setAnalytics] = useState<any>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { toggleTheme } = useTheme()
 
   useEffect(() => {
     fetchAnalytics()
@@ -38,6 +44,64 @@ export default function Home() {
       console.error('Failed to fetch analytics:', error)
     }
   }
+
+  // Toggle theme from command palette
+  useEffect(() => {
+    const handler = () => toggleTheme()
+    document.addEventListener('toggle-theme', handler)
+    return () => document.removeEventListener('toggle-theme', handler)
+  }, [toggleTheme])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMeta = e.metaKey || e.ctrlKey
+
+      // Cmd/Ctrl + K: Command Palette
+      if (isMeta && e.key === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen((prev) => !prev)
+        return
+      }
+
+      // Cmd/Ctrl + B: Toggle Sidebar
+      if (isMeta && e.key === 'b') {
+        e.preventDefault()
+        setSidebarCollapsed((prev) => !prev)
+        return
+      }
+
+      // Don't process shortcuts if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+
+      // Number keys for quick navigation
+      const navKeys: Record<string, string> = {
+        '1': 'overview',
+        '2': 'analyze',
+        '3': 'batch',
+        '4': 'history',
+        '5': 'analytics',
+        '6': 'performance',
+        '7': 'alerts',
+        '8': 'model-info',
+        '9': 'settings',
+      }
+      if (navKeys[e.key] && !isMeta && !e.altKey && !e.shiftKey) {
+        e.preventDefault()
+        setActiveView(navKeys[e.key])
+        setMobileMenuOpen(false)
+        return
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const handleNavigate = useCallback((view: string) => {
+    setActiveView(view)
+    setMobileMenuOpen(false)
+  }, [])
 
   const renderContent = () => {
     switch (activeView) {
@@ -184,17 +248,91 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background flex overflow-hidden text-foreground selection:bg-purple-500/30">
-      <Sidebar activeView={activeView} setActiveView={setActiveView} />
-      <div className="flex-1 flex flex-col h-screen relative overflow-hidden">
-        <Header />
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-purple-500/5 rounded-full blur-[150px] pointer-events-none -z-10" />
-        <div className="fixed top-1/4 right-1/4 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none -z-10" />
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`hidden lg:block ${mobileMenuOpen ? 'block' : ''}`}>
+        <Sidebar
+          activeView={activeView}
+          setActiveView={handleNavigate}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 lg:hidden transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <Sidebar
+          activeView={activeView}
+          setActiveView={handleNavigate}
+          collapsed={false}
+          onToggleCollapse={() => setMobileMenuOpen(false)}
+        />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
+        <Header
+          activeView={activeView}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+        />
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="fixed bottom-6 left-6 z-50 lg:hidden w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all"
+        >
+          {mobileMenuOpen ? (
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
+
+        {/* Ambient glow */}
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-purple-500/[0.03] rounded-full blur-[150px] pointer-events-none -z-10" />
+        <div className="fixed top-1/4 right-1/4 w-[600px] h-[600px] bg-blue-500/[0.03] rounded-full blur-[120px] pointer-events-none -z-10" />
+
+        {/* Content */}
         <main className="flex-1 overflow-y-auto scrollbar-hide z-0">
-          <div className="px-4 md:px-8 py-6 md:py-8 max-w-7xl mx-auto">
+          <div className="px-4 md:px-6 lg:px-8 py-6 md:py-8 max-w-7xl mx-auto">
             {renderContent()}
+          </div>
+
+          {/* Status Bar */}
+          <div className="border-t border-border/30 bg-card/30 backdrop-blur-sm px-4 md:px-6 py-2 flex items-center justify-between text-[10px] font-mono text-muted-foreground/40">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                System Online
+              </span>
+              <span>Model: XGBoost v3.0.0</span>
+              <span className="hidden sm:inline">Threshold: 0.5</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="hidden sm:inline">Keys: 1-9 nav · ⌘K search · ⌘B sidebar</span>
+              <span>FRAUDGUARD v3.0.0</span>
+            </div>
           </div>
         </main>
       </div>
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onNavigate={handleNavigate}
+      />
     </div>
   )
 }
