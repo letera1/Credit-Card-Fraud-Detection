@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 
-export const dynamic = 'force-dynamic'
-
 export const metadata: Metadata = {
   title: 'Fraud Detection AI - Enterprise Security Platform',
   description: 'AI-powered credit card fraud detection system',

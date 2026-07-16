@@ -11,6 +11,9 @@ const nextConfig = {
     config.resolve.alias['@'] = path.resolve(__dirname, 'src')
     return config
   },
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
 }
 
 module.exports = nextConfig
