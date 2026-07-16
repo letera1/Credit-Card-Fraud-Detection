@@ -350,4 +350,50 @@
   .animate-slide-down {
     animation: slideDown 0.3s ease-out both;
   }
+
+  /* Gradient Animation */
+  @keyframes gradientX {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradientX 3s ease infinite;
+  }
+
+  /* Border Glow Animation */
+  @keyframes borderGlow {
+    0%, 100% {
+      border-color: hsl(var(--primary) / 0.3);
+    }
+    50% {
+      border-color: hsl(var(--primary) / 0.6);
+    }
+  }
+
+  .animate-border-glow {
+    animation: borderGlow 2s ease-in-out infinite;
+  }
+
+  /* Icon Spin Animation */
+  @keyframes iconSpin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-icon-spin {
+    animation: iconSpin 1s linear infinite;
+  }
 }
