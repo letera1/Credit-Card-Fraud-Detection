@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
 import { usePathname } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
 import Header from '@/components/Header'
-import CommandPalette from '@/components/CommandPalette'
 import { useTheme } from '@/contexts/ThemeContext'
+
+const CommandPalette = lazy(() => import('@/components/CommandPalette'))
 
 const viewFromPath = (pathname: string) => {
   const seg = pathname.split('/').filter(Boolean)[0] || 'overview'
@@ -21,19 +22,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [pathname])
 
-  // Toggle theme from command palette custom event
   useEffect(() => {
     const handler = () => toggleTheme()
     document.addEventListener('toggle-theme', handler)
     return () => document.removeEventListener('toggle-theme', handler)
   }, [toggleTheme])
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMeta = e.metaKey || e.ctrlKey
@@ -67,7 +65,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-background flex overflow-hidden text-foreground selection:bg-purple-500/30">
-      {/* Mobile Overlay */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
@@ -75,7 +72,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       )}
 
-      {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <Sidebar
           activeView={activeView}
@@ -84,7 +80,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       </div>
 
-      {/* Mobile Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <Sidebar
           activeView={activeView}
@@ -93,7 +88,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       </div>
 
-      {/* Main Area */}
       <div className="flex-1 flex flex-col min-h-screen relative">
         <Header
           activeView={activeView}
@@ -102,17 +96,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           mobileMenuOpen={mobileMenuOpen}
         />
 
-        {/* Ambient glows */}
         <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-purple-500/[0.03] rounded-full blur-[150px] pointer-events-none -z-10" />
         <div className="fixed top-1/4 right-1/4 w-[600px] h-[600px] bg-blue-500/[0.03] rounded-full blur-[120px] pointer-events-none -z-10" />
 
-        {/* Page Content */}
         <main className="flex-1 overflow-y-auto scrollbar-hide z-0">
           <div className="px-4 md:px-6 lg:px-8 py-6 md:py-8 max-w-7xl mx-auto">
             {children}
           </div>
 
-          {/* Status Bar */}
           <div className="border-t border-border/30 bg-card/30 backdrop-blur-sm px-4 md:px-6 py-2 flex items-center justify-between text-[10px] font-mono text-muted-foreground/40">
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
@@ -130,10 +121,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
-      <CommandPalette
-        isOpen={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-      />
+      <Suspense fallback={null}>
+        {commandPaletteOpen && (
+          <CommandPalette
+            isOpen={commandPaletteOpen}
+            onClose={() => setCommandPaletteOpen(false)}
+          />
+        )}
+      </Suspense>
     </div>
   )
 }
