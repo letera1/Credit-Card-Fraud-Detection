@@ -64,7 +64,7 @@ function NavLink({
         href={item.href}
         onMouseEnter={(e) => onHover(e, item.id)}
         onMouseLeave={onLeave}
-        className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden ${
+        className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden ${
           collapsed ? 'px-0 py-2.5 justify-center mx-2' : 'px-3 py-2.5'
         } ${
           isActive
@@ -80,9 +80,9 @@ function NavLink({
           </>
         )}
 
-        <div className={`relative z-10 flex items-center justify-center ${collapsed ? '' : 'w-5 h-5'}`}>
+        <div className={`relative z-10 flex items-center justify-center transition-transform duration-300 ${collapsed ? '' : 'w-5 h-5'} group-hover:scale-110`}>
           <svg
-            className={`w-5 h-5 flex-shrink-0 transition-colors duration-200 ${
+            className={`w-5 h-5 flex-shrink-0 transition-all duration-300 ${
               isActive ? 'text-purple-400' : 'text-muted-foreground group-hover:text-purple-400'
             }`}
             fill="none"
@@ -99,11 +99,11 @@ function NavLink({
         </div>
 
         {!collapsed && (
-          <span className="relative z-10 flex-1 text-left truncate">{item.label}</span>
+          <span className="relative z-10 flex-1 text-left truncate transition-colors duration-300">{item.label}</span>
         )}
 
         {!collapsed && hasBadge && (
-          <span className="relative z-10 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500/15 border border-red-500/30 text-[10px] font-bold text-red-400 font-mono">
+          <span className="relative z-10 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500/15 border border-red-500/30 text-[10px] font-bold text-red-400 font-mono animate-pulse">
             {item.badge}
           </span>
         )}
@@ -154,18 +154,20 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
     if (collapsed) return null
     return (
       <div className="flex items-center justify-between px-3 mb-2">
-        <p className="text-[10px] font-mono font-semibold text-muted-foreground/60 uppercase tracking-[0.15em]">
-          {label}
-        </p>
         <div className="flex items-center gap-2">
-          {count !== undefined && count > 0 && (
-            <span className="text-[10px] font-mono text-muted-foreground/50">{count}</span>
-          )}
+          <p className="text-[10px] font-mono font-semibold text-muted-foreground/60 uppercase tracking-[0.15em]">
+            {label}
+          </p>
           {showDot && (
             <span className="flex h-1.5 w-1.5 relative">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
             </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {count !== undefined && count > 0 && (
+            <span className="text-[10px] font-mono text-muted-foreground/50">{count}</span>
           )}
         </div>
       </div>
@@ -180,14 +182,14 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
     >
       {/* Brand */}
       <div className={`border-b border-border/40 transition-all duration-300 ${collapsed ? 'p-3' : 'p-5'}`}>
-        <Link href="/overview" className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+        <Link href="/overview" className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} group`}>
           <div className="relative flex-shrink-0">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/20 transition-all duration-300 group-hover:shadow-purple-500/40 group-hover:scale-105">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-card" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-card animate-pulse" />
           </div>
 
           {!collapsed && (
@@ -197,7 +199,7 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-[9px] uppercase font-mono tracking-wider text-muted-foreground/60">v3.0.0</span>
-                <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 border border-green-500/20">LIVE</span>
+                <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 border border-green-500/20 animate-pulse">LIVE</span>
               </div>
             </div>
           )}
@@ -269,17 +271,17 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
           onClick={toggleTheme}
           onMouseEnter={(e) => handleNavHover(e, 'theme')}
           onMouseLeave={() => setHoveredItem(null)}
-          className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 ${
+          className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-300 ${
             collapsed ? 'px-0 py-2.5 justify-center' : 'px-3 py-2.5'
           }`}
         >
-          <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+          <div className="w-5 h-5 flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
             {theme === 'dark' ? (
-              <svg className="w-[18px] h-[18px] text-yellow-400 group-hover:text-yellow-300 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-[18px] h-[18px] text-yellow-400 group-hover:text-yellow-300 transition-colors duration-300" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             ) : (
-              <svg className="w-[18px] h-[18px] text-indigo-400 group-hover:text-indigo-300 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-[18px] h-[18px] text-indigo-400 group-hover:text-indigo-300 transition-colors duration-300" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
@@ -290,7 +292,7 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 ${
+            className={`group w-full flex items-center gap-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-300 ${
               collapsed ? 'px-0 py-2.5 justify-center mt-1' : 'px-3 py-2.5 mt-1'
             }`}
           >
@@ -304,25 +306,25 @@ export default function Sidebar({ activeView, collapsed = false, onToggleCollaps
         )}
 
         {!collapsed && (
-          <div className="mt-3 p-3 rounded-xl bg-muted/30 border border-border/30">
+          <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-muted/30 to-muted/20 border border-border/30 hover:from-muted/40 hover:to-muted/30 transition-all duration-300">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-purple-500/20">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-purple-500/20 ring-2 ring-purple-500/20">
                 <span className="text-xs font-bold text-white">ML</span>
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-foreground truncate">ML Engineer</p>
                 <p className="text-[10px] font-mono text-muted-foreground/60 truncate">admin@cluster.ml</p>
               </div>
-              <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)] flex-shrink-0" />
+              <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)] flex-shrink-0 animate-pulse" />
             </div>
           </div>
         )}
 
         {collapsed && (
           <div className="mt-2 flex justify-center">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-md shadow-purple-500/20 relative">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-md shadow-purple-500/20 ring-2 ring-purple-500/20 relative">
               <span className="text-xs font-bold text-white">ML</span>
-              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-card" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-card animate-pulse" />
             </div>
           </div>
         )}
