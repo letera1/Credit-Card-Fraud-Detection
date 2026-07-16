@@ -64,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [])
 
   return (
-    <div className="min-h-screen bg-background flex overflow-hidden text-foreground selection:bg-purple-500/30">
+    <div className="h-screen bg-background flex overflow-hidden text-foreground selection:bg-purple-500/30">
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
@@ -88,7 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       </div>
 
-      <div className="flex-1 flex flex-col min-h-screen relative">
+      <div className="flex-1 flex flex-col h-screen relative">
         <Header
           activeView={activeView}
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
