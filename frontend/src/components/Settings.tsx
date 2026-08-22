@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
+import { getHealth } from '@/lib/api'
 
 interface ModelConfig {
   threshold: number; enabled_models: string[]; alert_channels: string[]; batch_size: number; auto_retrain: boolean

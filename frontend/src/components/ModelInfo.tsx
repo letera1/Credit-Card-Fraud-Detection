@@ -54,7 +54,7 @@ export default function ModelInfo() {
     setRetrainProgress(90)
     setRetrainLogs(p => [...p, '[SYS] Serializing model artifact and updating registry...'])
     try {
-      await fetch('http://localhost:8000/retrain', { method: 'POST' })
+      await retrainModel()
       setRetrainLogs(p => [...p, '[SYS] Retraining complete. Model promoted to staging.'])
       setRetrainProgress(100)
     } catch (error) {
