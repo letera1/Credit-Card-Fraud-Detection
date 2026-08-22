@@ -2,12 +2,12 @@
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import logging
 import asyncio
-import json
 import os
 import joblib
 import numpy as np
@@ -20,33 +20,7 @@ from src.api.advanced_endpoints import router as advanced_router
 # Setup logging
 logger = setup_logger("api")
 
-# Initialize app
-app = FastAPI(
-    title="Credit Card Fraud Detection API - ML Expert Edition",
-    description="Advanced fraud detection with Ensemble ML, SHAP explainability, and Feature Engineering",
-    version="3.0.0",
-)
-
-# CORS configuration
-cors_origins = [
-    origin.strip()
-    for origin in os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,*").split(",")
-    if origin.strip()
-]
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"] if "*" in cors_origins else cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Register advanced endpoints
-app.include_router(advanced_router)
-
-# Initialize inference pipeline & models
+# Initialize inference pipeline & models state
 inference_pipeline = None
 best_model = None
 ensemble_models = None
@@ -61,86 +35,11 @@ risk_scores: Dict[str, List[int]] = {}
 model_metrics: Dict[str, Any] = {}
 
 
-class Transaction(BaseModel):
-    """Transaction data model."""
-    Time: float = Field(..., description="Seconds elapsed since first transaction")
-    V1: float
-    V2: float
-    V3: float
-    V4: float
-    V5: float
-    V6: float
-    V7: float
-    V8: float
-    V9: float
-    V10: float
-    V11: float
-    V12: float
-    V13: float
-    V14: float
-    V15: float
-    V16: float
-    V17: float
-    V18: float
-    V19: float
-    V20: float
-    V21: float
-    V22: float
-    V23: float
-    V24: float
-    V25: float
-    V26: float
-    V27: float
-    V28: float
-    Scaled_Amount: float = Field(..., description="Scaled transaction amount")
-    user_id: Optional[str] = Field(None, description="User identifier")
-    device_id: Optional[str] = Field(None, description="Device fingerprint")
-
-
-class PredictionResponse(BaseModel):
-    """Enhanced prediction response model."""
-    fraud_probability: float
-    is_fraud: bool
-    threshold: float
-    confidence: float
-    risk_score: int = Field(..., description="Risk score 0-100")
-    risk_level: str = Field(..., description="LOW, MEDIUM, HIGH, CRITICAL")
-    transaction_id: str
-    timestamp: str
-    anomaly_flags: List[str] = Field(default_factory=list)
-    recommended_action: str
-    shap_explanation: Optional[Dict[str, Any]] = Field(None, description="SHAP feature importance")
-    model_version: str = "3.0.0"
-
-
-class Alert(BaseModel):
-    """Alert model for fraud notifications."""
-    alert_id: str
-    transaction_id: str
-    severity: str
-    message: str
-    timestamp: str
-    status: str = "active"
-    risk_score: int = 0
-    alert_type: str = "high_amount"
-    amount: float = 0.0
-    merchant: str = "Unknown"
-    location: str = "Unknown"
-    solution: str = ""
-    recommended_action: str = ""
-    anomaly_flags: List[str] = Field(default_factory=list)
-    confidence: float = 0.0
-
-
-class AnalyticsResponse(BaseModel):
-    """Analytics dashboard data."""
-    total_transactions: int
-    fraud_detected: int
-    fraud_rate: float
-    avg_risk_score: float
-    high_risk_transactions: int
-    alerts_active: int
-    recent_transactions: List[Dict[str, Any]]
+def _dump_model(model_obj: BaseModel) -> Dict[str, Any]:
+    """Helper for Pydantic v1/v2 compatibility."""
+    if hasattr(model_obj, "model_dump"):
+        return model_obj.model_dump()
+    return model_obj.dict()
 
 
 def _seed_demo_data():
@@ -269,9 +168,8 @@ def _seed_demo_data():
             })
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Initialize model, explainers, and demo state on startup."""
+def _init_models_and_metrics():
+    """Load model artifacts and initialize metrics."""
     global inference_pipeline, best_model, ensemble_models, feature_names, shap_explainer, model_metrics
     
     try:
@@ -359,6 +257,122 @@ async def startup_event():
         _seed_demo_data()
 
 
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
+    """Modern lifespan handler for app initialization."""
+    _init_models_and_metrics()
+    yield
+
+
+# Initialize app
+app = FastAPI(
+    title="Credit Card Fraud Detection API - ML Expert Edition",
+    description="Advanced fraud detection with Ensemble ML, SHAP explainability, and Feature Engineering",
+    version="3.0.0",
+    lifespan=lifespan,
+)
+
+# CORS configuration
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,*").split(",")
+    if origin.strip()
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if "*" in cors_origins else cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Register advanced endpoints router
+app.include_router(advanced_router)
+
+
+class Transaction(BaseModel):
+    """Transaction data model."""
+    Time: float = Field(..., description="Seconds elapsed since first transaction")
+    V1: float
+    V2: float
+    V3: float
+    V4: float
+    V5: float
+    V6: float
+    V7: float
+    V8: float
+    V9: float
+    V10: float
+    V11: float
+    V12: float
+    V13: float
+    V14: float
+    V15: float
+    V16: float
+    V17: float
+    V18: float
+    V19: float
+    V20: float
+    V21: float
+    V22: float
+    V23: float
+    V24: float
+    V25: float
+    V26: float
+    V27: float
+    V28: float
+    Scaled_Amount: float = Field(..., description="Scaled transaction amount")
+    user_id: Optional[str] = Field(None, description="User identifier")
+    device_id: Optional[str] = Field(None, description="Device fingerprint")
+
+
+class PredictionResponse(BaseModel):
+    """Enhanced prediction response model."""
+    fraud_probability: float
+    is_fraud: bool
+    threshold: float
+    confidence: float
+    risk_score: int = Field(..., description="Risk score 0-100")
+    risk_level: str = Field(..., description="LOW, MEDIUM, HIGH, CRITICAL")
+    transaction_id: str
+    timestamp: str
+    anomaly_flags: List[str] = Field(default_factory=list)
+    recommended_action: str
+    shap_explanation: Optional[Dict[str, Any]] = Field(None, description="SHAP feature importance")
+    model_version: str = "3.0.0"
+
+
+class Alert(BaseModel):
+    """Alert model for fraud notifications."""
+    alert_id: str
+    transaction_id: str
+    severity: str
+    message: str
+    timestamp: str
+    status: str = "active"
+    risk_score: int = 0
+    alert_type: str = "high_amount"
+    amount: float = 0.0
+    merchant: str = "Unknown"
+    location: str = "Unknown"
+    solution: str = ""
+    recommended_action: str = ""
+    anomaly_flags: List[str] = Field(default_factory=list)
+    confidence: float = 0.0
+
+
+class AnalyticsResponse(BaseModel):
+    """Analytics dashboard data."""
+    total_transactions: int
+    fraud_detected: int
+    fraud_rate: float
+    avg_risk_score: float
+    high_risk_transactions: int
+    alerts_active: int
+    recent_transactions: List[Dict[str, Any]]
+
+
 @app.get("/")
 async def root():
     """Root metadata & service health info."""
@@ -385,7 +399,7 @@ async def predict(transaction: Transaction):
     """Predict fraud with real-time risk scoring, feature engineering, and SHAP explainability."""
     global best_model, shap_explainer, transaction_history, alert_queue, risk_scores
     try:
-        transaction_data = transaction.dict()
+        transaction_data = _dump_model(transaction)
         user_id = transaction_data.pop('user_id', None)
         device_id = transaction_data.pop('device_id', None)
         
@@ -486,7 +500,7 @@ async def predict(transaction: Transaction):
         # Save to history
         transaction_record = {
             **enhanced_result,
-            "transaction_data": transaction.dict()
+            "transaction_data": _dump_model(transaction)
         }
         transaction_history.append(transaction_record)
         
