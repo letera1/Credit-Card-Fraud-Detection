@@ -1,10 +1,16 @@
 import axios from 'axios'
+import { PredictionResult } from '@/types'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: API_URL,
 })
+
+export async function predictTransaction(data: any): Promise<PredictionResult> {
+  const response = await apiClient.post<PredictionResult>('/predict', data)
+  return response.data
+}
 
 export async function getAnalytics() {
   const response = await apiClient.get('/analytics')
@@ -57,6 +63,11 @@ export async function getHealth() {
   return response.data
 }
 
+export async function retrainModel() {
+  const response = await apiClient.post('/retrain')
+  return response.data
+}
+
 export async function exportReport(format: string, timeRange: string) {
   const response = await apiClient.post('/export-report', null, {
     params: { format, time_range: timeRange }
@@ -82,4 +93,3 @@ export async function createAuditLog(log: {
   const response = await apiClient.post('/audit-log', log)
   return response.data
 }
-

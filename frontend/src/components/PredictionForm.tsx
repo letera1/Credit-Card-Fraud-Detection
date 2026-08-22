@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import axios from 'axios'
+import { predictTransaction } from '@/lib/api'
 import { PredictionResult } from '@/types'
 
 type TemplateType = 'legitimate' | 'moderate' | 'fraud' | 'critical'
