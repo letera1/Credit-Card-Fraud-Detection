@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getModelInfo, getModelComparison, getAnalytics } from '@/lib/api'
+import { getModelInfo, getModelComparison, getAnalytics, retrainModel } from '@/lib/api'
 
 interface ModelVersion {
   version: string; created_at: string; metrics: Record<string, number>;

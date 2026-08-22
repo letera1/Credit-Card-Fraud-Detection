@@ -76,8 +76,8 @@ export default function BatchProcessing() {
             setUploadProgress((currentBatch / totalBatches) * 100)
 
             const promises = batch.map(tx =>
-              axios.post('http://localhost:8000/predict', tx)
-                .then(res => res.data)
+              predictTransaction(tx)
+                .then(data => data)
                 .catch(err => ({ error: err.message }))
             )
             const batchRes = await Promise.all(promises)
