@@ -143,8 +143,8 @@ export default function PredictionForm({ onResult, loading, setLoading }: Predic
         activeTemplate = null
       }
 
-      const response = await axios.post('http://localhost:8000/predict', data)
-      let result: PredictionResult = response.data
+      const responseData = await predictTransaction(data)
+      let result: PredictionResult = responseData
 
       if (activeTemplate && templateOverrides[activeTemplate]) {
         const overrides = templateOverrides[activeTemplate]

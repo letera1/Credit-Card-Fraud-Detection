@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import axios from 'axios'
+import { predictTransaction } from '@/lib/api'
 
 interface BatchResult {
   total: number
