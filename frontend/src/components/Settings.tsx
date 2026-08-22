@@ -35,8 +35,8 @@ export default function Settings() {
   const handleTestConnection = async () => {
     setTestResult('testing')
     try {
-      const res = await fetch('http://localhost:8000/health')
-      if (res.ok) setTestResult('success')
+      const data = await getHealth()
+      if (data && data.status === 'healthy') setTestResult('success')
       else setTestResult('failed')
     } catch { setTestResult('failed') }
   }

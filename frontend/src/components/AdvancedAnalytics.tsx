@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { getAnalytics, getFeatureImportance, getModelComparison, getDataDrift, exportReport, getAuditLogs } from '@/lib/api'
+import { getAnalytics, getFeatureImportance, getModelComparison, getDataDrift, exportReport, getAuditLogs, API_URL } from '@/lib/api'
 
 interface AuditEntry {
   id?: number; timestamp: string; user_id: string; action: string; resource: string; details: any; ip_address?: string
@@ -614,7 +614,7 @@ export default function AdvancedAnalytics() {
                         Report compiled successfully
                       </div>
                       <div className="flex gap-3">
-                        <a href={`http://localhost:8000${downloadUrl}`} target="_blank" rel="noopener noreferrer"
+                        <a href={`${API_URL}${downloadUrl}`} target="_blank" rel="noopener noreferrer"
                           className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 font-semibold font-mono text-xs tracking-wider text-white rounded-xl shadow-lg shadow-emerald-500/25 transition-all text-center">
                           DOWNLOAD
                         </a>
