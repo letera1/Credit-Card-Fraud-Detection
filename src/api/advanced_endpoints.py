@@ -104,7 +104,7 @@ async def get_audit_logs(limit: int = 100, user_id: Optional[str] = None):
 @router.post("/audit-log")
 async def create_audit_log(log: AuditLog):
     """Create a new audit log entry."""
-    log_entry = log.dict()
+    log_entry = log.model_dump() if hasattr(log, "model_dump") else log.dict()
     log_entry["id"] = len(audit_logs) + 1
     audit_logs.append(log_entry)
     return {"message": "Audit log created", "id": log_entry["id"]}
