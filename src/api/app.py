@@ -54,6 +54,23 @@ def _load_training_report() -> Dict[str, Any]:
         return {}
 
 
+_shap_init_failed = False
+
+
+def _get_shap_explainer():
+    """Return the SHAP explainer, creating it on first use if startup did not."""
+    global shap_explainer, _shap_init_failed
+    if shap_explainer is None and not _shap_init_failed:
+        try:
+            from src.explainability import ModelExplainer
+            shap_explainer = ModelExplainer()
+            logger.info("SHAP ModelExplainer loaded successfully")
+        except Exception as e:
+            _shap_init_failed = True
+            logger.warning(f"SHAP Explainer init: {e}")
+    return shap_explainer
+
+
 def _init_models_and_metrics():
     """Load model artifacts and initialize metrics."""
     global inference_pipeline, best_model, ensemble_models, feature_names, shap_explainer, model_metrics
@@ -83,12 +100,7 @@ def _init_models_and_metrics():
     except Exception as e:
         logger.warning(f"Feature names loading: {e}")
 
-    try:
-        from src.explainability import ModelExplainer
-        shap_explainer = ModelExplainer()
-        logger.info("SHAP ModelExplainer loaded successfully")
-    except Exception as e:
-        logger.warning(f"SHAP Explainer init: {e}")
+    _get_shap_explainer()
 
     model_metrics = _load_training_report()
 
@@ -307,9 +319,10 @@ async def predict(transaction: Transaction):
         
         # SHAP Explainability calculation
         shap_explanation = None
-        if shap_explainer is not None:
+        explainer = _get_shap_explainer()
+        if explainer is not None:
             try:
-                exp_res = shap_explainer.explain_prediction(df.values, top_n=5)
+                exp_res = explainer.explain_prediction(df.values, top_n=5)
                 top_feats = exp_res.get("top_features", [])
                 shap_explanation = {
                     "base_value": exp_res.get("base_value", 0.0),
@@ -512,9 +525,8 @@ async def model_info():
 async def model_feature_importance():
     """Get global feature importance from the model."""
     try:
-        from src.explainability import ModelExplainer
-        explainer = shap_explainer if shap_explainer is not None else ModelExplainer()
-        importance = explainer.get_feature_importance()
+        explainer = _get_shap_explainer()
+        importance = explainer.get_feature_importance() if explainer is not None else []
         if importance:
             return {
                 "feature_importance": importance,

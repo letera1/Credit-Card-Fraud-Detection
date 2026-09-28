@@ -1,5 +1,5 @@
 """
-Advanced API endpoints for enterprise features
+Preview API endpoints. Except for the audit log, these return static sample data.
 """
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
@@ -37,7 +37,7 @@ class AuditLog(BaseModel):
     ip_address: Optional[str] = None
 
 
-@router.post("/batch-predict")
+@router.post("/batch-predict", tags=["Preview"])
 async def batch_predict(request: BatchPredictionRequest, background_tasks: BackgroundTasks):
     """
     Process multiple transactions in batch.
@@ -67,7 +67,7 @@ async def batch_predict(request: BatchPredictionRequest, background_tasks: Backg
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/batch-status/{job_id}")
+@router.get("/batch-status/{job_id}", tags=["Preview"])
 async def get_batch_status(job_id: str):
     """Get status of a batch processing job."""
     # Mock implementation
@@ -79,7 +79,7 @@ async def get_batch_status(job_id: str):
     }
 
 
-@router.get("/audit-logs")
+@router.get("/audit-logs", tags=["Operations"])
 async def get_audit_logs(limit: int = 100, user_id: Optional[str] = None):
     """
     Retrieve audit logs for compliance and security.
@@ -101,7 +101,7 @@ async def get_audit_logs(limit: int = 100, user_id: Optional[str] = None):
     }
 
 
-@router.post("/audit-log")
+@router.post("/audit-log", tags=["Operations"])
 async def create_audit_log(log: AuditLog):
     """Create a new audit log entry."""
     log_entry = log.model_dump() if hasattr(log, "model_dump") else log.dict()
@@ -110,7 +110,7 @@ async def create_audit_log(log: AuditLog):
     return {"message": "Audit log created", "id": log_entry["id"]}
 
 
-@router.get("/api-metrics")
+@router.get("/api-metrics", tags=["Preview"])
 async def get_api_metrics():
     """Get API performance metrics."""
     return {
@@ -124,7 +124,7 @@ async def get_api_metrics():
     }
 
 
-@router.get("/model-comparison")
+@router.get("/model-comparison", tags=["Preview"])
 async def compare_models():
     """Compare performance of different model versions."""
     return {
@@ -152,7 +152,7 @@ async def compare_models():
     }
 
 
-@router.get("/data-drift")
+@router.get("/data-drift", tags=["Preview"])
 async def detect_data_drift():
     """Detect data drift in incoming transactions."""
     return {
@@ -165,7 +165,7 @@ async def detect_data_drift():
     }
 
 
-@router.post("/export-report")
+@router.post("/export-report", tags=["Preview"])
 async def export_report(format: str = "pdf", time_range: str = "24h"):
     """
     Export analytics report in various formats.
@@ -188,7 +188,7 @@ async def export_report(format: str = "pdf", time_range: str = "24h"):
     }
 
 
-@router.get("/feature-importance")
+@router.get("/feature-importance", tags=["Preview"])
 async def get_feature_importance():
     """Get real-time feature importance from the model."""
     return {

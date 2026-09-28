@@ -10,6 +10,7 @@ services:
     volumes:
       - ./models:/app/models:ro
       - ./config:/app/config:ro
+      - ./reports:/app/reports:ro
       - fraud-logs:/app/logs
     environment:
       - APP_ENV=production
