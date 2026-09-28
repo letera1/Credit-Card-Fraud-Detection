@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 import json
 import os
@@ -342,7 +342,7 @@ async def predict(transaction: Transaction):
             "risk_score": risk_score,
             "risk_level": risk_level,
             "transaction_id": transaction_id,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "anomaly_flags": anomaly_flags,
             "recommended_action": recommended_action,
             "shap_explanation": shap_explanation,
@@ -378,7 +378,7 @@ async def predict(transaction: Transaction):
                 "transaction_id": transaction_id,
                 "severity": risk_level,
                 "message": f"Fraud detected with {risk_score}% risk score",
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "status": "active",
                 "risk_score": risk_score,
                 "alert_type": alert_type,
