@@ -1,16 +1,15 @@
-"""FastAPI application for fraud detection service with advanced ML features."""
+"""FastAPI application for the FraudShield fraud detection service."""
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
-import logging
+from datetime import datetime
 import asyncio
+import json
 import os
 import joblib
-import numpy as np
 
 from src.pipeline.inference_pipeline import InferencePipeline
 from src.monitoring import setup_logger
@@ -28,11 +27,14 @@ feature_names = None
 shap_explainer = None
 feature_engineer = FeatureEngineer()
 
-# In-memory storage for demo & runtime monitoring
+# In-memory runtime state: resets on restart and is not shared between worker processes
 transaction_history: List[Dict[str, Any]] = []
 alert_queue: List[Dict[str, Any]] = []
 risk_scores: Dict[str, List[int]] = {}
 model_metrics: Dict[str, Any] = {}
+
+DECISION_THRESHOLD = 0.5
+TRAINING_REPORT_PATH = "reports/model_report.json"
 
 
 def _dump_model(model_obj: BaseModel) -> Dict[str, Any]:
@@ -42,130 +44,14 @@ def _dump_model(model_obj: BaseModel) -> Dict[str, Any]:
     return model_obj.dict()
 
 
-def _seed_demo_data():
-    """Seed initial realistic transactions and alerts for live dashboard presentation."""
-    global transaction_history, alert_queue, risk_scores
-    base_time = datetime.now()
-
-    demo_txns = [
-        {
-            "id_offset": 1,
-            "risk_score": 12,
-            "risk_level": "LOW",
-            "is_fraud": False,
-            "fraud_probability": 0.12,
-            "confidence": 0.88,
-            "action": "APPROVE - Transaction appears legitimate",
-            "flags": [],
-            "amount": 42.50,
-            "minutes_ago": 18
-        },
-        {
-            "id_offset": 2,
-            "risk_score": 38,
-            "risk_level": "MEDIUM",
-            "is_fraud": False,
-            "fraud_probability": 0.38,
-            "confidence": 0.62,
-            "action": "REVIEW - Monitoring velocity",
-            "flags": ["Abnormal PCA feature values"],
-            "amount": 280.00,
-            "minutes_ago": 14
-        },
-        {
-            "id_offset": 3,
-            "risk_score": 92,
-            "risk_level": "CRITICAL",
-            "is_fraud": True,
-            "fraud_probability": 0.92,
-            "confidence": 0.92,
-            "action": "BLOCK - Immediate intervention required",
-            "flags": ["Unusually high transaction amount", "Abnormal PCA feature values"],
-            "amount": 3499.00,
-            "minutes_ago": 9
-        },
-        {
-            "id_offset": 4,
-            "risk_score": 18,
-            "risk_level": "LOW",
-            "is_fraud": False,
-            "fraud_probability": 0.18,
-            "confidence": 0.82,
-            "action": "APPROVE - Transaction appears legitimate",
-            "flags": [],
-            "amount": 15.90,
-            "minutes_ago": 5
-        },
-        {
-            "id_offset": 5,
-            "risk_score": 78,
-            "risk_level": "HIGH",
-            "is_fraud": True,
-            "fraud_probability": 0.78,
-            "confidence": 0.78,
-            "action": "REVIEW - Manual verification needed",
-            "flags": ["Late-night transaction", "Abnormal PCA feature values"],
-            "amount": 1250.00,
-            "minutes_ago": 2
-        }
-    ]
-
-    for item in demo_txns:
-        tx_id = f"TXN-{base_time.strftime('%Y%m%d')}-{1000 + item['id_offset']}"
-        tx_time = (base_time - timedelta(minutes=item["minutes_ago"])).isoformat()
-        
-        record = {
-            "fraud_probability": item["fraud_probability"],
-            "is_fraud": item["is_fraud"],
-            "threshold": 0.5,
-            "confidence": item["confidence"],
-            "risk_score": item["risk_score"],
-            "risk_level": item["risk_level"],
-            "transaction_id": tx_id,
-            "timestamp": tx_time,
-            "anomaly_flags": item["flags"],
-            "recommended_action": item["action"],
-            "shap_explanation": {
-                "base_value": 0.016,
-                "feature_names": ["V14", "V4", "V12", "V_Anomaly_Score", "Scaled_Amount"],
-                "shap_values": [0.85, 0.72, 0.65, 0.51, 0.44] if item["is_fraud"] else [-0.45, -0.32, -0.28, -0.15, -0.10],
-                "top_features": [
-                    {"feature": "V14", "value": -3.2, "shap_value": 0.85, "impact": "increases"},
-                    {"feature": "V4", "value": 2.1, "shap_value": 0.72, "impact": "increases"},
-                    {"feature": "V12", "value": -2.8, "shap_value": 0.65, "impact": "increases"},
-                    {"feature": "V_Anomaly_Score", "value": 78.4, "shap_value": 0.51, "impact": "increases"},
-                    {"feature": "Scaled_Amount", "value": item["amount"] / 500, "shap_value": 0.44, "impact": "increases"}
-                ] if item["is_fraud"] else [
-                    {"feature": "V14", "value": 0.1, "shap_value": -0.45, "impact": "decreases"},
-                    {"feature": "V4", "value": -0.05, "shap_value": -0.32, "impact": "decreases"},
-                    {"feature": "V12", "value": 0.08, "shap_value": -0.28, "impact": "decreases"},
-                    {"feature": "V_Anomaly_Score", "value": 1.2, "shap_value": -0.15, "impact": "decreases"},
-                    {"feature": "Scaled_Amount", "value": 0.25, "shap_value": -0.10, "impact": "decreases"}
-                ],
-                "total_features": 45
-            },
-            "model_version": "3.0.0"
-        }
-        transaction_history.append(record)
-
-        if item["is_fraud"]:
-            alert_queue.append({
-                "alert_id": f"ALT-{len(alert_queue) + 1}",
-                "transaction_id": tx_id,
-                "severity": item["risk_level"],
-                "message": f"Fraud detected with {item['risk_score']}% risk score",
-                "timestamp": tx_time,
-                "status": "active",
-                "risk_score": item["risk_score"],
-                "alert_type": "high_amount" if item["amount"] > 1000 else "location_anomaly",
-                "amount": item["amount"],
-                "merchant": f"Merchant-{item['id_offset'] * 1234 % 9000 + 1000}",
-                "location": item["flags"][0] if item["flags"] else "Verified Location",
-                "solution": "Immediate block recommended. Verify cardholder identity." if item["risk_score"] >= 80 else "Manual review recommended. Send SMS verification.",
-                "recommended_action": item["action"],
-                "anomaly_flags": item["flags"],
-                "confidence": round(item["confidence"] * 100, 1)
-            })
+def _load_training_report() -> Dict[str, Any]:
+    """Load the evaluation report written by train_advanced_model.py."""
+    try:
+        with open(TRAINING_REPORT_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError) as e:
+        logger.warning(f"Training report unavailable: {e}")
+        return {}
 
 
 def _init_models_and_metrics():
@@ -204,57 +90,7 @@ def _init_models_and_metrics():
     except Exception as e:
         logger.warning(f"SHAP Explainer init: {e}")
 
-    model_metrics = {
-        "timestamp": datetime.now().isoformat(),
-        "models": {
-            "ensemble": {
-                "accuracy": 0.9982,
-                "roc_auc": 0.9824,
-                "precision": 0.9012,
-                "recall": 0.8541,
-                "f1_score": 0.8762,
-                "status": "production"
-            },
-            "xgboost": {
-                "accuracy": 0.9978,
-                "roc_auc": 0.9790,
-                "precision": 0.8950,
-                "recall": 0.8420,
-                "f1_score": 0.8677,
-                "status": "active"
-            },
-            "lightgbm": {
-                "accuracy": 0.9965,
-                "roc_auc": 0.9752,
-                "precision": 0.8840,
-                "recall": 0.8310,
-                "f1_score": 0.8567,
-                "status": "active"
-            },
-            "random_forest": {
-                "accuracy": 0.9951,
-                "roc_auc": 0.9684,
-                "precision": 0.8720,
-                "recall": 0.8190,
-                "f1_score": 0.8447,
-                "status": "active"
-            }
-        },
-        "dataset": {
-            "total_samples": 284807,
-            "fraud_samples": 492,
-            "fraud_percentage": 0.172,
-            "features_engineered": 45
-        },
-        "feature_engineering": {
-            "total_features": 45,
-            "raw_features": 30,
-            "derived_features": 15
-        }
-    }
-
-    if not transaction_history:
-        _seed_demo_data()
+    model_metrics = _load_training_report()
 
 
 @asynccontextmanager
@@ -264,12 +100,35 @@ async def lifespan(app_instance: FastAPI):
     yield
 
 
-# Initialize app
+API_DESCRIPTION = """
+Real-time credit card fraud scoring with an XGBoost model, SHAP explanations, risk scoring and alerting.
+
+Runtime data (transactions, alerts, risk profiles) is held in memory and resets on restart.
+Endpoints tagged **Preview** return static sample data and are not used by the dashboard.
+"""
+
+OPENAPI_TAGS = [
+    {"name": "Scoring", "description": "Score transactions for fraud risk."},
+    {"name": "Monitoring", "description": "Transaction history, aggregates and risk profiles."},
+    {"name": "Alerts", "description": "Alerts raised for fraudulent or high-risk transactions."},
+    {"name": "Model", "description": "Serving model metadata, evaluation metrics and feature importance."},
+    {"name": "Service", "description": "Service metadata and health."},
+    {"name": "Operations", "description": "Administrative operations."},
+    {"name": "Preview", "description": "Placeholder endpoints that return static sample data."},
+]
+
 app = FastAPI(
-    title="Credit Card Fraud Detection API - ML Expert Edition",
-    description="Advanced fraud detection with Ensemble ML, SHAP explainability, and Feature Engineering",
+    title="FraudShield API",
+    description=API_DESCRIPTION,
     version="3.0.0",
     lifespan=lifespan,
+    openapi_tags=OPENAPI_TAGS,
+    swagger_ui_parameters={
+        "defaultModelsExpandDepth": -1,
+        "displayRequestDuration": True,
+        "docExpansion": "list",
+        "filter": True,
+    },
 )
 
 # CORS configuration
@@ -373,28 +232,24 @@ class AnalyticsResponse(BaseModel):
     recent_transactions: List[Dict[str, Any]]
 
 
-@app.get("/")
+@app.get("/", tags=["Service"])
 async def root():
-    """Root metadata & service health info."""
+    """Service metadata."""
     return {
         "status": "healthy",
-        "service": "Credit Card Fraud Detection API - ML Expert Edition",
+        "service": "FraudShield API",
         "version": "3.0.0",
         "features": [
-            "Ensemble ML (XGBoost + LightGBM + Random Forest)",
-            "Advanced Feature Engineering (45+ features)",
-            "SMOTE for Class Imbalance",
-            "SHAP Explainability",
-            "Real-time Model Monitoring",
-            "Data Drift Detection",
-            "Risk Scoring & Anomaly Detection",
-            "Transaction History & Analytics"
+            "XGBoost fraud scoring on 45 engineered features",
+            "SHAP explanation for every prediction",
+            "Risk scoring, anomaly flags and alerting",
+            "Transaction history and analytics",
         ],
-        "model_performance": model_metrics.get('models', {}).get('ensemble', {}) if model_metrics else {}
+        "model_performance": model_metrics.get("models", {}).get("xgboost", {}),
     }
 
 
-@app.post("/predict", response_model=PredictionResponse)
+@app.post("/predict", response_model=PredictionResponse, tags=["Scoring"])
 async def predict(transaction: Transaction):
     """Predict fraud with real-time risk scoring, feature engineering, and SHAP explainability."""
     global best_model, shap_explainer, transaction_history, alert_queue, risk_scores
@@ -415,7 +270,7 @@ async def predict(transaction: Transaction):
         
         # Predict probability
         fraud_proba = float(best_model.predict_proba(df)[0][1])
-        threshold = 0.5
+        threshold = DECISION_THRESHOLD
         is_fraud = fraud_proba > threshold
         confidence = float(max(fraud_proba, 1 - fraud_proba))
         
@@ -465,22 +320,6 @@ async def predict(transaction: Transaction):
                 }
             except Exception as ex:
                 logger.warning(f"SHAP explanation computation error: {ex}")
-        
-        # Fallback SHAP explanation if needed
-        if shap_explanation is None:
-            shap_explanation = {
-                "base_value": 0.016,
-                "feature_names": ["V14", "V4", "V12", "V_Anomaly_Score", "Scaled_Amount"],
-                "shap_values": [0.85, 0.72, 0.65, 0.51, 0.44] if is_fraud else [-0.45, -0.32, -0.28, -0.15, -0.10],
-                "top_features": [
-                    {"feature": "V14", "value": float(transaction.V14), "shap_value": 0.85 if is_fraud else -0.45, "impact": "increases" if is_fraud else "decreases"},
-                    {"feature": "V4", "value": float(transaction.V4), "shap_value": 0.72 if is_fraud else -0.32, "impact": "increases" if is_fraud else "decreases"},
-                    {"feature": "V12", "value": float(transaction.V12), "shap_value": 0.65 if is_fraud else -0.28, "impact": "increases" if is_fraud else "decreases"},
-                    {"feature": "V_Anomaly_Score", "value": 75.0 if is_fraud else 1.5, "shap_value": 0.51 if is_fraud else -0.15, "impact": "increases" if is_fraud else "decreases"},
-                    {"feature": "Scaled_Amount", "value": float(transaction.Scaled_Amount), "shap_value": 0.44 if is_fraud else -0.10, "impact": "increases" if is_fraud else "decreases"}
-                ],
-                "total_features": 45
-            }
 
         enhanced_result = {
             "fraud_probability": round(fraud_proba, 4),
@@ -552,7 +391,7 @@ async def predict(transaction: Transaction):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/analytics", response_model=AnalyticsResponse)
+@app.get("/analytics", response_model=AnalyticsResponse, tags=["Monitoring"])
 async def get_analytics():
     """Get analytics dashboard overview data."""
     total = len(transaction_history)
@@ -573,7 +412,7 @@ async def get_analytics():
     }
 
 
-@app.get("/transactions")
+@app.get("/transactions", tags=["Monitoring"])
 async def get_transactions(limit: int = 50):
     """Get transaction history with pagination limit."""
     safe_limit = max(1, min(limit, 500))
@@ -583,7 +422,7 @@ async def get_transactions(limit: int = 50):
     }
 
 
-@app.get("/alerts")
+@app.get("/alerts", tags=["Alerts"])
 async def get_alerts():
     """Get active and historical alerts."""
     return {
@@ -593,7 +432,7 @@ async def get_alerts():
     }
 
 
-@app.post("/alerts/{alert_id}/resolve")
+@app.post("/alerts/{alert_id}/resolve", tags=["Alerts"])
 async def resolve_alert(alert_id: str):
     """Resolve an existing fraud alert."""
     for alert in alert_queue:
@@ -603,7 +442,7 @@ async def resolve_alert(alert_id: str):
     raise HTTPException(status_code=404, detail="Alert not found")
 
 
-@app.get("/risk-profile/{user_id}")
+@app.get("/risk-profile/{user_id}", tags=["Monitoring"])
 async def get_risk_profile(user_id: str):
     """Get user risk profile summary."""
     if user_id not in risk_scores:
@@ -634,7 +473,7 @@ async def websocket_monitor(websocket: WebSocket):
         logger.info("WebSocket client disconnected")
 
 
-@app.get("/health")
+@app.get("/health", tags=["Service"])
 async def health():
     """Detailed health check endpoint."""
     return {
@@ -646,26 +485,30 @@ async def health():
         "active_alerts": len([a for a in alert_queue if a.get('status') == 'active']),
         "version": "3.0.0",
         "features": {
-            "total_features": len(feature_names) if feature_names else 45,
+            "total_features": len(feature_names) if feature_names else None,
             "feature_engineering": True,
-            "ensemble_models": list(ensemble_models.keys()) if ensemble_models else ["xgboost", "lightgbm", "random_forest"]
+            "ensemble_models": list(ensemble_models.keys()) if ensemble_models else []
         }
     }
 
 
-@app.get("/model/info")
+@app.get("/model/info", tags=["Model"])
 async def model_info():
-    """Get model metadata and training parameters."""
+    """Serving model metadata and the evaluation report from the last training run."""
     return {
         "version": "3.0.0",
-        "models": model_metrics.get('models', {}) if model_metrics else {},
-        "dataset": model_metrics.get('dataset', {}) if model_metrics else {},
-        "feature_engineering": model_metrics.get('feature_engineering', {}) if model_metrics else {},
-        "training_date": model_metrics.get('timestamp', datetime.now().isoformat())
+        "serving_model": type(best_model).__name__ if best_model is not None else None,
+        "decision_threshold": DECISION_THRESHOLD,
+        "feature_names": list(feature_names) if feature_names else [],
+        "ensemble_members": list(ensemble_models.keys()) if ensemble_models else [],
+        "models": model_metrics.get("models", {}),
+        "dataset": model_metrics.get("dataset", {}),
+        "feature_engineering": model_metrics.get("feature_engineering", {}),
+        "training_date": model_metrics.get("timestamp"),
     }
 
 
-@app.get("/model/feature-importance")
+@app.get("/model/feature-importance", tags=["Model"])
 async def model_feature_importance():
     """Get global feature importance from the model."""
     try:
@@ -680,45 +523,23 @@ async def model_feature_importance():
     except Exception as e:
         logger.warning(f"Feature importance query: {e}")
 
-    fallback_features = [
-        {"feature": "V14", "importance": 0.156, "rank": 1},
-        {"feature": "V4", "importance": 0.134, "rank": 2},
-        {"feature": "V12", "importance": 0.121, "rank": 3},
-        {"feature": "V10", "importance": 0.098, "rank": 4},
-        {"feature": "V17", "importance": 0.087, "rank": 5},
-        {"feature": "Scaled_Amount", "importance": 0.076, "rank": 6},
-        {"feature": "V11", "importance": 0.065, "rank": 7},
-        {"feature": "V16", "importance": 0.054, "rank": 8},
-        {"feature": "V_Anomaly_Score", "importance": 0.048, "rank": 9},
-        {"feature": "V_Std", "importance": 0.043, "rank": 10},
-    ]
+    return {"feature_importance": [], "total_features": 0}
+
+
+@app.post("/retrain", tags=["Preview"])
+async def retrain_model():
+    """Placeholder: retraining is not automated and no model is changed."""
     return {
-        "feature_importance": fallback_features,
-        "total_features": len(fallback_features)
+        "status": "success",
+        "message": "Retraining is not automated. Run `python train_advanced_model.py`, then restart the API.",
+        "version": "3.0.0",
+        "metrics": model_metrics.get("models", {}).get("xgboost", {}),
     }
 
 
-@app.post("/retrain")
-async def retrain_model():
-    """Trigger model retraining and artifact refresh."""
-    global model_metrics
-    try:
-        model_metrics["timestamp"] = datetime.now().isoformat()
-        return {
-            "status": "success",
-            "message": "Model retraining executed and synchronized with registry",
-            "version": "3.0.0",
-            "promoted_to": "production",
-            "metrics": model_metrics.get("models", {}).get("ensemble", {})
-        }
-    except Exception as e:
-        logger.error(f"Retrain error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.delete("/reset")
+@app.delete("/reset", tags=["Operations"])
 async def reset_data():
-    """Reset demo data."""
+    """Clear all in-memory transactions, alerts and risk profiles."""
     global transaction_history, alert_queue, risk_scores
     transaction_history = []
     alert_queue = []
