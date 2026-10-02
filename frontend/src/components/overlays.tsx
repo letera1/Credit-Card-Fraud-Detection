@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { cn } from '@/lib/utils'
@@ -71,7 +72,8 @@ export function Sheet({ open, onClose, title, description, children, footer }: O
   const titleId = useId()
   if (!open) return null
 
-  return (
+  // Portal so parent layout utilities (e.g. space-y margins) can't offset the fixed overlay.
+  return createPortal(
     <div className="fixed inset-0 z-50">
       <div className={scrim} onClick={onClose} aria-hidden />
       <div
@@ -96,7 +98,8 @@ export function Sheet({ open, onClose, title, description, children, footer }: O
         <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
         {footer && <div className="flex justify-end gap-2 border-t border-border px-6 py-4">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -105,7 +108,7 @@ export function Dialog({ open, onClose, title, description, children, footer }: 
   const titleId = useId()
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className={scrim} onClick={onClose} aria-hidden />
       <div
@@ -125,6 +128,7 @@ export function Dialog({ open, onClose, title, description, children, footer }: 
         {children && <div className="px-6 pt-4">{children}</div>}
         {footer && <div className="mt-6 flex justify-end gap-2 border-t border-border px-6 py-4">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
