@@ -209,9 +209,11 @@ export default function FraudAlerts() {
                       <td className={cn(table.td, 'text-right font-medium tabular-nums text-foreground')}>{alert.risk_score}</td>
                       <td className={cn(table.td, 'text-muted-foreground')}>
                         {alert.anomaly_flags.length ? (
-                          <span className="block max-w-56 truncate" title={alert.anomaly_flags.join(', ')}>
-                            {alert.anomaly_flags[0]}
-                            {alert.anomaly_flags.length > 1 && <span className="text-subtle-foreground"> +{alert.anomaly_flags.length - 1}</span>}
+                          <span className="flex max-w-60 items-center gap-1" title={alert.anomaly_flags.join(', ')}>
+                            <span className="truncate">{alert.anomaly_flags[0]}</span>
+                            {alert.anomaly_flags.length > 1 && (
+                              <span className="shrink-0 text-subtle-foreground">+{alert.anomaly_flags.length - 1}</span>
+                            )}
                           </span>
                         ) : (
                           '—'
