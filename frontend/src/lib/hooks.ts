@@ -42,3 +42,14 @@ export function usePolling<T>(fetcher: () => Promise<T>, intervalMs = 10000) {
 
   return { data, error, loading, refresh, setData }
 }
+
+/** "⌘" on Apple platforms, "Ctrl" elsewhere; resolved after mount to avoid hydration mismatches. */
+export function useModifierKey() {
+  const [key, setKey] = useState('Ctrl')
+  useEffect(() => {
+    if (/Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) setKey('⌘')
+  }, [])
+  return key
+}
+
+export const ALERTS_CHANGED_EVENT = 'fraudshield:alerts-changed'
