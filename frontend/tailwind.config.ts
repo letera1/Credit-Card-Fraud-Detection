@@ -1,113 +1,61 @@
 import type { Config } from 'tailwindcss'
 
+const token = (name: string) => `rgb(var(--${name}) / <alpha-value>)`
+
 const config: Config = {
-  content: [
-    './src/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
+        background: token('background'),
+        surface: token('surface'),
+        muted: token('muted'),
+        hover: token('hover'),
+        foreground: token('foreground'),
+        'muted-foreground': token('muted-foreground'),
+        'subtle-foreground': token('subtle-foreground'),
+        border: token('border'),
+        'border-strong': token('border-strong'),
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: token('primary'),
+          hover: token('primary-hover'),
+          foreground: token('primary-foreground'),
         },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
-        },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
+        accent: token('accent'),
+        ring: token('ring'),
+        success: { DEFAULT: token('success'), fg: token('success-fg') },
+        warning: { DEFAULT: token('warning'), fg: token('warning-fg') },
+        orange: { DEFAULT: token('orange'), fg: token('orange-fg') },
+        danger: { DEFAULT: token('danger'), fg: token('danger-fg') },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['var(--font-jetbrains-mono)', 'Fira Code', 'monospace'],
+        sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        mono: ['var(--font-geist-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       fontSize: {
-        '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
-        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
-        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
-        '5xl': ['3rem', { lineHeight: '1' }],
+        '13': ['0.8125rem', { lineHeight: '1.25rem' }],
       },
-      spacing: {
-        '18': '4.5rem',
-        '88': '22rem',
-        '128': '32rem',
-      },
-      borderRadius: {
-        '4xl': '2rem',
-      },
-      animation: {
-        'pulse-border': 'pulseBorder 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'shimmer': 'shimmer 2s infinite',
-        'spin-slow': 'spin 8s linear infinite',
-        'ping-slow': 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite',
-        'bounce-slow': 'bounce 3s infinite',
-        'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
-        'float': 'float 6s ease-in-out infinite',
-        'float-delayed': 'float 6s 2s ease-in-out infinite',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'slide-down': 'slideDown 0.3s ease-out',
-        'scale-in': 'scaleIn 0.2s ease-out',
-        'fade-in': 'fadeIn 0.5s ease-out',
-        'spin-slow-reverse': 'spin 12s linear infinite reverse',
-        'bounce-gentle': 'bounceGentle 2s ease-in-out infinite',
+      boxShadow: {
+        xs: '0 1px 2px 0 rgb(16 24 40 / 0.05)',
+        sm: '0 1px 3px 0 rgb(16 24 40 / 0.08), 0 1px 2px -1px rgb(16 24 40 / 0.06)',
+        lg: '0 12px 16px -4px rgb(16 24 40 / 0.08), 0 4px 6px -2px rgb(16 24 40 / 0.03)',
+        xl: '0 20px 24px -4px rgb(16 24 40 / 0.1), 0 8px 8px -4px rgb(16 24 40 / 0.04)',
       },
       keyframes: {
-        pulseBorder: {
-          '0%, 100%': { borderColor: 'rgba(239, 68, 68, 0.2)' },
-          '50%': { borderColor: 'rgba(239, 68, 68, 0.8)' },
-        },
-        shimmer: {
-          '100%': { transform: 'translateX(100%)' },
-        },
-        pulseSoft: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0.7' },
-        },
-        float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-10px)' },
-        },
-        slideUp: {
-          from: { opacity: '0', transform: 'translateY(10px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
-        },
-        slideDown: {
-          from: { opacity: '0', transform: 'translateY(-10px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
-        },
-        scaleIn: {
-          from: { opacity: '0', transform: 'scale(0.95)' },
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'slide-in-right': { from: { transform: 'translateX(100%)' }, to: { transform: 'translateX(0)' } },
+        'slide-in-left': { from: { transform: 'translateX(-100%)' }, to: { transform: 'translateX(0)' } },
+        'scale-in': {
+          from: { opacity: '0', transform: 'scale(0.97)' },
           to: { opacity: '1', transform: 'scale(1)' },
         },
-        fadeIn: {
-          from: { opacity: '0' },
-          to: { opacity: '1' },
-        },
-        bounceGentle: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-5px)' },
-        },
       },
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      animation: {
+        'fade-in': 'fade-in 150ms ease-out',
+        'slide-in-right': 'slide-in-right 200ms cubic-bezier(0.32, 0.72, 0, 1)',
+        'slide-in-left': 'slide-in-left 200ms cubic-bezier(0.32, 0.72, 0, 1)',
+        'scale-in': 'scale-in 150ms ease-out',
       },
     },
   },
