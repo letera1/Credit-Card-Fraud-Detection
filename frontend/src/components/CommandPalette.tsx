@@ -52,13 +52,29 @@ export default function CommandPalette({ onClose }: { onClose: () => void }) {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return commands
-    return commands.filter((command) => `${command.label} ${command.hint ?? ''} ${command.group}`.toLowerCase().includes(q))
+    // Label prefix matches first, then label matches, then description/group matches.
+    const rank = (command: Command) => {
+      const label = command.label.toLowerCase()
+      if (label.startsWith(q)) return 0
+      if (label.includes(q)) return 1
+      return `${command.hint ?? ''} ${command.group}`.toLowerCase().includes(q) ? 2 : -1
+    }
+    return commands
+      .map((command) => ({ command, rank: rank(command) }))
+      .filter((entry) => entry.rank >= 0)
+      .sort((a, b) => a.rank - b.rank)
+      .map((entry) => entry.command)
   }, [commands, query])
 
-  const groups = useMemo(() => {
-    const map = new Map<string, { command: Command; index: number }[]>()
-    results.forEach((command, index) => map.set(command.group, [...(map.get(command.group) ?? []), { command, index }]))
-    return [...map.entries()]
+  // Grouped for display; `ordered` matches the on-screen order so arrow keys move visually.
+  const { groups, ordered } = useMemo(() => {
+    const map = new Map<string, Command[]>()
+    results.forEach((command) => map.set(command.group, [...(map.get(command.group) ?? []), command]))
+    const flat = [...map.values()].flat()
+    return {
+      ordered: flat,
+      groups: [...map.entries()].map(([group, items]) => [group, items.map((command) => ({ command, index: flat.indexOf(command) }))] as const),
+    }
   }, [results])
 
   const run = (command: Command) => {
@@ -69,17 +85,17 @@ export default function CommandPalette({ onClose }: { onClose: () => void }) {
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
-      if (!results.length) return
-      const next = (activeIndex + (event.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length
+      if (!ordered.length) return
+      const next = (activeIndex + (event.key === 'ArrowDown' ? 1 : -1) + ordered.length) % ordered.length
       setActiveIndex(next)
       listRef.current?.querySelector(`[data-index="${next}"]`)?.scrollIntoView({ block: 'nearest' })
-    } else if (event.key === 'Enter' && results[activeIndex]) {
+    } else if (event.key === 'Enter' && ordered[activeIndex]) {
       event.preventDefault()
-      run(results[activeIndex])
+      run(ordered[activeIndex])
     }
   }
 
-  const activeCommand = results[activeIndex]
+  const activeCommand = ordered[activeIndex]
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[12vh]">
