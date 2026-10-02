@@ -132,6 +132,17 @@ export function DecisionBadge({ decision }: { decision: Decision }) {
   )
 }
 
+/** Quieter than DecisionBadge, for table cells next to a RiskBadge. */
+export function DecisionLabel({ decision }: { decision: Decision }) {
+  const meta = DECISION_META[decision]
+  return (
+    <span className="inline-flex items-center gap-1.5 text-foreground">
+      <span className={cn('size-1.5 rounded-full', meta.solid)} aria-hidden />
+      {meta.label}
+    </span>
+  )
+}
+
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn('animate-pulse rounded-md bg-muted', className)} aria-hidden />
 }
