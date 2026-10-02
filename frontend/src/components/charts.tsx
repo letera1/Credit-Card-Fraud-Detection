@@ -48,9 +48,9 @@ export function ColumnChart({ columns, height = 168, labelEvery = 1 }: { columns
     <div>
       <div className="flex items-end gap-1 border-b border-border" style={{ height }}>
         {columns.map((column) => (
-          <div key={column.key} className="flex h-full min-w-0 flex-1 flex-col justify-end" title={column.title}>
+          <div key={column.key} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end" title={column.title}>
             <div
-              className={cn('flex w-full flex-col justify-end overflow-hidden rounded-t-[3px] bg-primary', column.barClassName)}
+              className={cn('flex w-full max-w-11 flex-col justify-end overflow-hidden rounded-t-[3px] bg-primary', column.barClassName)}
               style={{ height: `${(column.value / max) * 100}%`, minHeight: column.value > 0 ? 2 : 0 }}
             >
               {!!column.highlight && (

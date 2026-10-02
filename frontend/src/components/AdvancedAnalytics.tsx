@@ -22,6 +22,7 @@ const BUCKETS = [
   { ms: 24 * 60 * MINUTE, label: 'day' },
 ]
 const MAX_COLUMNS = 24
+const MIN_COLUMNS = 12
 
 function buildActivity(transactions: TransactionRecord[]) {
   const times = transactions.map((tx) => new Date(tx.timestamp).getTime()).filter(Number.isFinite)
@@ -29,8 +30,10 @@ function buildActivity(transactions: TransactionRecord[]) {
   const first = Math.min(...times)
   const last = Math.max(...times)
   const bucket = BUCKETS.find((b) => (last - first) / b.ms < MAX_COLUMNS) ?? BUCKETS[BUCKETS.length - 1]
-  const start = Math.floor(first / bucket.ms) * bucket.ms
-  const count = Math.floor((last - start) / bucket.ms) + 1
+  const lastStart = Math.floor(last / bucket.ms) * bucket.ms
+  // Always show a window of at least MIN_COLUMNS buckets ending at the latest activity.
+  const start = Math.min(Math.floor(first / bucket.ms) * bucket.ms, lastStart - (MIN_COLUMNS - 1) * bucket.ms)
+  const count = Math.floor((lastStart - start) / bucket.ms) + 1
   const totals = new Array<number>(count).fill(0)
   const flagged = new Array<number>(count).fill(0)
 

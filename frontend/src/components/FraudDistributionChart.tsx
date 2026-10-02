@@ -1,6 +1,6 @@
 import { Card, CardHeader } from '@/components/ui'
-import { cn, formatNumber, formatPercent, RISK_LEVELS, RISK_META } from '@/lib/utils'
-import type { RiskLevel } from '@/types'
+import { cn, DECISION_META, formatNumber, formatPercent, parseAction, RISK_LEVELS, RISK_META } from '@/lib/utils'
+import type { Decision, RiskLevel } from '@/types'
 
 export function countByRiskLevel(items: { risk_level: RiskLevel }[]) {
   const counts: Record<RiskLevel, number> = { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 }
@@ -48,7 +48,7 @@ export default function FraudDistributionChart({
   total,
   className,
 }: {
-  transactions: { risk_level: RiskLevel }[]
+  transactions: { risk_level: RiskLevel; recommended_action: string }[]
   total: number
   className?: string
 }) {
@@ -57,11 +57,35 @@ export default function FraudDistributionChart({
       ? `Latest ${formatNumber(transactions.length)} of ${formatNumber(total)} scored transactions`
       : `All ${formatNumber(total)} scored transactions`
 
+  const decisions: Record<Decision, number> = { APPROVE: 0, REVIEW: 0, BLOCK: 0 }
+  transactions.forEach((tx) => {
+    decisions[parseAction(tx.recommended_action).decision] += 1
+  })
+
   return (
-    <Card className={className}>
+    <Card className={cn('flex flex-col', className)}>
       <CardHeader title="Risk distribution" description={description} />
       <div className="p-5">
         <RiskDistribution counts={countByRiskLevel(transactions)} />
+      </div>
+      <div className="mt-auto border-t border-border p-5">
+        <h3 className="text-13 font-medium text-foreground">Decisions</h3>
+        <dl className="mt-3 grid grid-cols-3 gap-4">
+          {(Object.keys(decisions) as Decision[]).map((decision) => (
+            <div key={decision} className="rounded-lg bg-hover px-4 py-3">
+              <dt className="flex items-center gap-2 text-13 text-muted-foreground">
+                <span className={cn('size-2 rounded-full', DECISION_META[decision].solid)} aria-hidden />
+                {DECISION_META[decision].label}
+              </dt>
+              <dd className="mt-1 flex items-baseline gap-1.5">
+                <span className="text-lg font-semibold tabular-nums text-foreground">{formatNumber(decisions[decision])}</span>
+                <span className="text-xs tabular-nums text-subtle-foreground">
+                  {transactions.length ? formatPercent(decisions[decision] / transactions.length, 0) : '0%'}
+                </span>
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </Card>
   )
