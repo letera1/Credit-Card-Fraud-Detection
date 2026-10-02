@@ -46,7 +46,7 @@ export default function Header({ activeItem, onOpenCommandPalette, onOpenNavigat
           className="focus-ring hidden h-9 w-60 items-center gap-2 rounded-lg border border-border-strong bg-surface px-3 text-sm text-subtle-foreground shadow-xs transition-colors hover:bg-hover md:flex"
         >
           <Search className="size-4 shrink-0" aria-hidden />
-          <span className="flex-1 truncate text-left">Search or jump to…</span>
+          <span className="flex-1 truncate text-left">Search…</span>
           <span className="flex items-center gap-0.5">
             <Kbd>{modifier}</Kbd>
             <Kbd>K</Kbd>

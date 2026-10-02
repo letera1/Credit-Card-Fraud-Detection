@@ -107,7 +107,7 @@ export default function Settings() {
             items={[
               { label: 'Endpoint', value: <span className="font-mono text-xs">{API_URL}</span> },
               { label: 'Status', value: <StatusText state={state} /> },
-              { label: 'Round-trip time', value: latency !== null && !health.error ? `${latency} ms` : '—' },
+              { label: 'Round-trip time', value: latency !== null && !health.error ? `${latency} ms` : 'Not measured' },
               { label: 'API version', value: h?.version ?? '—' },
               { label: 'Model', value: h ? (h.model_loaded ? 'Loaded' : 'Not loaded') : '—' },
               { label: 'SHAP explanations', value: h ? (h.shap_available ? 'Available' : 'Unavailable') : '—' },
