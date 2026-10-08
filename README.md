@@ -17,7 +17,7 @@
 
 <br/>
 
-[![CI/CD](https://img.shields.io/github/actions/workflow/status/letera1/Credit-Card-Fraud-Detection/ci-cd.yml?branch=main&label=CI%2FCD&style=flat-square)](https://github.com/letera1/Credit-Card-Fraud-Detection/actions)
+[![CI/CD](https://img.shields.io/github/actions/workflow/status/tuta699/credit-card-fraud-detection/ci-cd.yml?branch=main&label=CI%2FCD&style=flat-square)](https://github.com/tuta699/credit-card-fraud-detection/actions)
 [![API](https://img.shields.io/badge/API-FastAPI%20%2B%20Uvicorn-009688?style=flat-square)](#api-reference)
 [![ML](https://img.shields.io/badge/ML-XGBoost%20%7C%20LightGBM%20%7C%20RF-FF6600?style=flat-square)](#model-training)
 [![Security](https://img.shields.io/badge/Security-Hardened-red?style=flat-square)](#security)
