@@ -129,12 +129,17 @@ OPENAPI_TAGS = [
     {"name": "Preview", "description": "Placeholder endpoints that return static sample data."},
 ]
 
+is_prod = os.getenv("APP_ENV", "development").lower() == "production"
+
 app = FastAPI(
     title="FraudShield API",
     description=API_DESCRIPTION,
     version="3.0.0",
     lifespan=lifespan,
     openapi_tags=OPENAPI_TAGS,
+    docs_url=None if is_prod else "/docs",
+    redoc_url=None if is_prod else "/redoc",
+    openapi_url=None if is_prod else "/openapi.json",
     swagger_ui_parameters={
         "defaultModelsExpandDepth": -1,
         "displayRequestDuration": True,
@@ -143,18 +148,63 @@ app = FastAPI(
     },
 )
 
+from fastapi import Request, HTTPException, status
+from starlette.middleware.base import BaseHTTPMiddleware
+import time
+from collections import defaultdict
+
+# Simple in-memory rate limiting (100 requests per minute per IP)
+# For production, Redis or a dedicated gateway (NGINX/Kong) is recommended.
+RATE_LIMIT_REQUESTS = 100
+RATE_LIMIT_WINDOW = 60
+ip_request_counts = defaultdict(list)
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        client_ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "unknown").split(",")[0].strip()
+        now = time.time()
+        
+        # Clean up old requests
+        ip_request_counts[client_ip] = [t for t in ip_request_counts[client_ip] if now - t < RATE_LIMIT_WINDOW]
+        
+        if len(ip_request_counts[client_ip]) >= RATE_LIMIT_REQUESTS:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests, please try again later."}
+            )
+            
+        ip_request_counts[client_ip].append(now)
+        return await call_next(request)
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
+
+app.add_middleware(RateLimitMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+
 # CORS configuration
 cors_origins = [
     origin.strip()
-    for origin in os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,*").split(",")
-    if origin.strip()
+    for origin in os.getenv("CORS_ALLOW_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+    if origin.strip() and origin.strip() != "*"
 ]
+
+# Ensure at least one origin for testing locally, fallback to local if empty
+if not cors_origins:
+    cors_origins = ["http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if "*" in cors_origins else cors_origins,
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
